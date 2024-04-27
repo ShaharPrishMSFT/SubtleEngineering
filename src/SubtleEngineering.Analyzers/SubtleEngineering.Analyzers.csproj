@@ -7,7 +7,6 @@
 		<ImplicitUsings>enable</ImplicitUsings>
 		<Nullable>enable</Nullable>
 		<PackageId>SubtleEngineering.Analyzers</PackageId>
-		<Version>0.0.1</Version>
 		<PackageVersion>0.0.1</PackageVersion>
 		<TreatWarningsAsErrors>true</TreatWarningsAsErrors>
 		<!--
@@ -31,10 +30,6 @@
 		<PackageLicenseExpression>Apache-2.0</PackageLicenseExpression>
 		<RepositoryUrl>https://github.com/ShaharPrishMSFT/SubtleEngineering</RepositoryUrl>
 	</PropertyGroup>
-
-	<Target Condition="'$(Configuration)' != 'Debug'" Name="UpdateAssemblyVersion" BeforeTargets="Build">
-		<Exec Command="dotnet gitversion /output buildserver" />
-	</Target>
 	
 	<ItemGroup>
 		<PackageReference Include="Microsoft.Bcl.AsyncInterfaces" Version="8.0.0">
