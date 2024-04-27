@@ -54,6 +54,11 @@
             // Check if the class is decorated with the RequireUsingAttribute
             var classSymbol = context.SemanticModel.GetDeclaredSymbol(classDeclaration);
 
+            if (classSymbol == null)
+            {
+                return;
+            }
+
             if (!HasAttribute(classSymbol))
                 return;
 
@@ -73,7 +78,13 @@
         {
             var objectCreation = (ObjectCreationExpressionSyntax)context.Node;
             // Get the type symbol and check for the attribute
-            ITypeSymbol typeSymbol = context.SemanticModel.GetTypeInfo(objectCreation).Type;
+            var typeSymbol = context.SemanticModel.GetTypeInfo(objectCreation).Type;
+
+            if (typeSymbol == null)
+            {
+                return;
+            }
+
             if (HasAttribute(typeSymbol))
             {
                 // Verify 'using' context and report diagnostics as needed
@@ -85,7 +96,13 @@
         private static void AnalyzeInvocationExpression(SyntaxNodeAnalysisContext context)
         {
             var invocationExpression = (InvocationExpressionSyntax)context.Node;
-            IMethodSymbol methodSymbol = context.SemanticModel.GetSymbolInfo(invocationExpression).Symbol as IMethodSymbol;
+            var methodSymbol = context.SemanticModel.GetSymbolInfo(invocationExpression).Symbol as IMethodSymbol;
+
+            if (methodSymbol == null)
+            {
+                return;
+            }
+
             if (HasAttribute(methodSymbol))
             {
                 // Verify 'using' context and report diagnostics as needed
@@ -94,7 +111,7 @@
         }
 
         private static bool HasAttribute(ISymbol typeSymbol)
-            => typeSymbol.GetAttributes().Any(attr => attr.AttributeClass.Name == "RequireUsingAttribute");
+            => typeSymbol.GetAttributes().Any(attr => attr.AttributeClass?.Name == "RequireUsingAttribute");
 
         // Common method to check 'using' context and report diagnostics
         private static void CheckUsingContext(string symbolUsed, SyntaxNode node, SyntaxNodeAnalysisContext context)
