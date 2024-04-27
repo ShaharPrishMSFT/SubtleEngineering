@@ -32,7 +32,7 @@
 		<RepositoryUrl>https://github.com/ShaharPrishMSFT/SubtleEngineering</RepositoryUrl>
 	</PropertyGroup>
 
-	<Target Name="UpdateAssemblyVersion" BeforeTargets="Build">
+	<Target Condition="'$(Configuration)' != 'Debug'" Name="UpdateAssemblyVersion" BeforeTargets="Build">
 		<Exec Command="dotnet gitversion /output buildserver" />
 	</Target>
 	
