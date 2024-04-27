@@ -22,4 +22,4 @@ jobs:
     - name: Restore dependencies
       run: dotnet restore ./src
     - name: Build
-      run: dotnet build ./src --no-restore
+      run: dotnet build  -c Release ./src --no-restore
