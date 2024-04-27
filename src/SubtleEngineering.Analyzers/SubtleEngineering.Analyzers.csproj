@@ -7,7 +7,7 @@
 		<ImplicitUsings>enable</ImplicitUsings>
 		<Nullable>enable</Nullable>
 		<PackageId>SubtleEngineering.Analyzers</PackageId>
-		<PackageVersion>0.0.8</PackageVersion>
+		<PackageVersion>0.0.9</PackageVersion>
 		<TreatWarningsAsErrors>true</TreatWarningsAsErrors>
 		<!--
 		NU5100: Test platforms do not need to travel with the library
@@ -24,7 +24,7 @@
 		<Authors>Shahar Prish</Authors>
 		<Owners>Shahar Prish</Owners>
 		<Copyright>@ Shahar Prish. All rights reserved.</Copyright>
-		<Description>Visual Studio Solution Tools</Description>
+		<Description>Better engineering</Description>
 		<Summary>Better enginerring</Summary>
 		<RepositoryBranch>main</RepositoryBranch>
 		<PackageLicenseExpression>Apache-2.0</PackageLicenseExpression>

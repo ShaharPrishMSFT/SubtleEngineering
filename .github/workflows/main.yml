@@ -22,16 +22,19 @@ jobs:
     - name: Build
       run: dotnet build ./src -c Release --no-restore
       
-    - name: Create Nuget Package
-      run: dotnet pack -c Release /p:Version=${{github.event.release.tag_name}} /p:PackageReleaseNotes="See https://github.com/ShaharPrishMSFT/SubtleEngineering/releases/tag/${{github.event.release.tag_name}}" ./src/SubtleEngineering.Analyzers
+    - name: Create Nuget Package - Analyzers
+      run: dotnet pack -c Release --version-suffix '' /p:Version=${{github.event.release.tag_name}} /p:PackageReleaseNotes="See https://github.com/ShaharPrishMSFT/SubtleEngineering/releases/tag/${{github.event.release.tag_name}}" ./src/SubtleEngineering.Analyzers
+
+    - name: Create Nuget Package - Decorators
+      run: dotnet pack -c Release  --version-suffix ''  /p:Version=${{github.event.release.tag_name}} /p:PackageReleaseNotes="See https://github.com/ShaharPrishMSFT/SubtleEngineering/releases/tag/${{github.event.release.tag_name}}" ./src/SubtleEngineering.Analyzers.Deorators
 
     - name: Archive Nuget Package for Project
-      uses: actions/upload-artifact@v1
+      uses: actions/upload-artifact@v4
       with:
         name: packages
-        path: "./src/SubtleEngineering.Analyzers/bin/Release/SubtleEngineering.Analyzers.${{github.event.release.tag_name}}.nupkg"
+        path: "./src/**/bin/Release/*.nupkg"
 
     - name: Publish Nuget Package
-      run: dotnet nuget push ./src/**/*.nupkg --source https://api.nuget.org/v3/index.json --api-key ${{ secrets.NUGET_API_KEY }}
+      run: dotnet nuget push ./src/**/*.nupkg --source https://api.nuget.org/v3/index.json --api-key ${{ secrets.NUGET_API_KEY }} --skip-duplicate
 
       

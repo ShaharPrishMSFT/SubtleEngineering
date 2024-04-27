@@ -9,6 +9,12 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "SubtleEngineering.Analyzers
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "SubtleEngineering.Analyzers.Tests", "SubtleEngineering.Analyzers.Tests\SubtleEngineering.Analyzers.Tests.csproj", "{23FD7D3D-4613-4460-B140-3843195D0504}"
 EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "GitHub", "GitHub", "{2C079D8E-7C94-40FB-99D7-4155B4F0B7BB}"
+	ProjectSection(SolutionItems) = preProject
+		..\.github\workflows\build-main.yml = ..\.github\workflows\build-main.yml
+		..\.github\workflows\main.yml = ..\.github\workflows\main.yml
+	EndProjectSection
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
