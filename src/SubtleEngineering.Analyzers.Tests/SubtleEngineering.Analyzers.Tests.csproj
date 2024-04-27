@@ -8,7 +8,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\SubtleEngineering.Analyzers.Decorators\SubtleEngineering.Analyzers.Decorators.csproj" />
-    <Analyzer Include="..\SubtleEngineering.Analyzers\bin\Debug\netstandard2.0\SubtleEngineering.Analyzers.dll" />
+    <Analyzer Condition="'$(Configuration)' == 'Debug'" Include="..\SubtleEngineering.Analyzers\bin\Debug\netstandard2.0\SubtleEngineering.Analyzers.dll" />
   </ItemGroup>
 
 
