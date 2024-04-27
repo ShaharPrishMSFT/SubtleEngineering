@@ -3,11 +3,11 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
 VisualStudioVersion = 17.10.34804.81
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SubtleEngineering.Analyzers", "SubtleEngineering.Analyzers\SubtleEngineering.Analyzers.csproj", "{AD6E72D6-5A50-4A33-90EF-FBEB35876B64}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "SubtleEngineering.Analyzers", "SubtleEngineering.Analyzers\SubtleEngineering.Analyzers.csproj", "{AD6E72D6-5A50-4A33-90EF-FBEB35876B64}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SubtleEngineering.Analyzers.Decorators", "SubtleEngineering.Analyzers.Decorators\SubtleEngineering.Analyzers.Decorators.csproj", "{B1D92BF2-ED4B-4ACD-A605-383B364D9F4D}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "SubtleEngineering.Analyzers.Decorators", "SubtleEngineering.Analyzers.Decorators\SubtleEngineering.Analyzers.Decorators.csproj", "{B1D92BF2-ED4B-4ACD-A605-383B364D9F4D}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SubtleEngineering.Analyzers.Tests", "SubtleEngineering.Analyzers.Tests\SubtleEngineering.Analyzers.Tests.csproj", "{23FD7D3D-4613-4460-B140-3843195D0504}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "SubtleEngineering.Analyzers.Tests", "SubtleEngineering.Analyzers.Tests\SubtleEngineering.Analyzers.Tests.csproj", "{23FD7D3D-4613-4460-B140-3843195D0504}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -26,7 +26,6 @@ Global
 		{23FD7D3D-4613-4460-B140-3843195D0504}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{23FD7D3D-4613-4460-B140-3843195D0504}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{23FD7D3D-4613-4460-B140-3843195D0504}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{23FD7D3D-4613-4460-B140-3843195D0504}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
