@@ -28,7 +28,7 @@
 		<Description>Visual Studio Solution Tools</Description>
 		<Summary>Better enginerring</Summary>
 		<RepositoryBranch>main</RepositoryBranch>
-		<PackageLicenseExpression>apache-2.0</PackageLicenseExpression>
+		<PackageLicenseExpression>Apache-2.0</PackageLicenseExpression>
 		<RepositoryUrl>https://github.com/ShaharPrishMSFT/SubtleEngineering</RepositoryUrl>
 	</PropertyGroup>
 	
