@@ -26,7 +26,7 @@ jobs:
       run: dotnet pack -c Release --version-suffix '' /p:Version=${{github.event.release.tag_name}} /p:PackageReleaseNotes="See https://github.com/ShaharPrishMSFT/SubtleEngineering/releases/tag/${{github.event.release.tag_name}}" ./src/SubtleEngineering.Analyzers
 
     - name: Create Nuget Package - Decorators
-      run: dotnet pack -c Release  --version-suffix ''  /p:Version=${{github.event.release.tag_name}} /p:PackageReleaseNotes="See https://github.com/ShaharPrishMSFT/SubtleEngineering/releases/tag/${{github.event.release.tag_name}}" ./src/SubtleEngineering.Analyzers.Deorators
+      run: dotnet pack -c Release  --version-suffix ''  /p:Version=${{github.event.release.tag_name}} /p:PackageReleaseNotes="See https://github.com/ShaharPrishMSFT/SubtleEngineering/releases/tag/${{github.event.release.tag_name}}" ./src/SubtleEngineering.Analyzers.Decorators
 
     - name: Archive Nuget Package for Project
       uses: actions/upload-artifact@v4
