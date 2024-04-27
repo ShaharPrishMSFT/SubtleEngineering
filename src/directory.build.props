@@ -1,0 +1,31 @@
+<Project>
+	<PropertyGroup>
+		<Properties>
+			<AnalyzersVersion>0.1.0-alpha1</AnalyzersVersion>
+			<DecoratorsVersion>0.1.0-alpha1</DecoratorsVersion>
+		</Properties>
+		
+		<Properties>
+			<LangVersion>latest</LangVersion>
+			<ImplicitUsings>enable</ImplicitUsings>
+			<Nullable>enable</Nullable>
+			<TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+			<!--
+		NU5100: Test platforms do not need to travel with the library
+		NU5104: Stable release required.
+		-->
+			<WarningsNotAsErrors>618,672</WarningsNotAsErrors>
+			<NoWarn>1701,1702,AD0001,CA5394,NU5100,NU5104</NoWarn>
+			<WarningLevel>7</WarningLevel>
+			<Product>SubtleEngineering</Product>
+			<Authors>Shahar Prish</Authors>
+			<Owners>Shahar Prish</Owners>
+			<Copyright>@ Shahar Prish. All rights reserved.</Copyright>
+			<Description>Better engineering</Description>
+			<Summary>Better enginerring</Summary>
+			<RepositoryBranch>main</RepositoryBranch>
+			<PackageLicenseExpression>Apache-2.0</PackageLicenseExpression>
+			<RepositoryUrl>https://github.com/ShaharPrishMSFT/SubtleEngineering</RepositoryUrl>
+		</Properties>
+	</PropertyGroup>
+</Project>
