@@ -31,6 +31,10 @@
 		<PackageLicenseExpression>Apache-2.0</PackageLicenseExpression>
 		<RepositoryUrl>https://github.com/ShaharPrishMSFT/SubtleEngineering</RepositoryUrl>
 	</PropertyGroup>
+
+	<Target Name="UpdateAssemblyVersion" BeforeTargets="Build">
+		<Exec Command="dotnet gitversion /output buildserver" />
+	</Target>
 	
 	<ItemGroup>
 		<PackageReference Include="Microsoft.Bcl.AsyncInterfaces" Version="8.0.0">
