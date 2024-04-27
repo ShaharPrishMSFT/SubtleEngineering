@@ -1,2 +1,2 @@
 # SubtleEngineering
-Set of tools for better engineering experience.
+Set of tools for a better engineering experience.
