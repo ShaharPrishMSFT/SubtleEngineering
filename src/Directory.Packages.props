@@ -1,13 +1,28 @@
 ﻿<!--This project was modified by VsSolutions.Tools.SolForge (https://github.com/ShaharPrishMSFT/VsSolutions.Tools/)-->
 <Project>
-    <!--For more info on shared project properties, see https://learn.microsoft.com/en-us/nuget/consume-packages/Central-Package-Management-->
-    <PropertyGroup>
-        <ManagePackageVersionsCentrally>true</ManagePackageVersionsCentrally>
-    </PropertyGroup>
-    <ItemGroup>
-        <PackageVersion Include="Microsoft.Bcl.AsyncInterfaces" Version="8.0.0" />
-        <PackageVersion Include="Microsoft.CodeAnalysis.Analyzers" Version="3.3.4" />
-        <PackageVersion Include="Microsoft.CodeAnalysis.CSharp" Version="4.9.2" />
-        <PackageVersion Include="Microsoft.CodeAnalysis.CSharp.Workspaces" Version="4.9.2" />
-    </ItemGroup>
+	<!--For more info on shared project properties, see https://learn.microsoft.com/en-us/nuget/consume-packages/Central-Package-Management-->
+	<PropertyGroup>
+		<ManagePackageVersionsCentrally>true</ManagePackageVersionsCentrally>
+	</PropertyGroup>
+	<ItemGroup>
+		<PackageVersion Include="Microsoft.Bcl.AsyncInterfaces" Version="8.0.0" />
+		<PackageVersion Include="Microsoft.CodeAnalysis.Analyzers" Version="3.3.4" />
+		<PackageVersion Include="coverlet.collector" Version="6.0.0" />
+		<PackageVersion Include="Microsoft.NET.Test.Sdk" Version="17.8.0" />
+		<PackageVersion Include="SmartAnalyzers.RoslynTestKit" Version="5.0.2" />
+		<PackageVersion Include="xunit" Version="2.5.3" />
+		<PackageVersion Include="xunit.runner.visualstudio" Version="2.5.3" />
+	</ItemGroup>
+	
+	<ItemGroup>
+		<PackageVersion Include="Microsoft.CodeAnalysis" Version="4.9.2"/>
+		<PackageVersion Include="Microsoft.CodeAnalysis.Common" Version="4.9.2"/>
+		<PackageVersion Include="Microsoft.CodeAnalysis.CSharp" Version="4.9.2" />
+		<PackageVersion Include="Microsoft.CodeAnalysis.VisualBasic" Version="4.9.2" />
+		<PackageVersion Include="Microsoft.CodeAnalysis.CSharp.Workspaces" Version="4.9.2" />
+		<PackageVersion Include="Microsoft.CodeAnalysis.VisualBasic.Workspaces" Version="4.9.2" />
+		<PackageVersion Include="Microsoft.CodeAnalysis.Workspaces.Common" Version="4.9.2" />
+		<PackageVersion Include="Microsoft.CodeAnalysis.Scripting.Common" Version="4.9.2" />
+		<PackageVersion Include="Microsoft.CodeAnalysis.Features" Version="4.9.2" />
+	</ItemGroup>
 </Project>

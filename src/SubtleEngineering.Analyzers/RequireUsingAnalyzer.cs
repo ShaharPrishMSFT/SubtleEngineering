@@ -20,14 +20,14 @@
 
         private static readonly ImmutableArray<DiagnosticDescriptor> Rule = ImmutableArray.Create(
             new DiagnosticDescriptor(
-                "SE1000",
+                DiagnosticIds.TypeMustBeInstantiatedWithinAUsingStatement,
                 "Type must be instantiated within a using statement",
                 "Type or method '{0}' must only be instantiated or called within a using statement or using declaration",
                 "Usage",
                 DiagnosticSeverity.Warning,
                 isEnabledByDefault: true),
             new DiagnosticDescriptor(
-                "SE1001",
+                DiagnosticIds.TypesDecoratedWithTheRequireUsingAttributeMustInheritFromIDisposable,
                 $"Types decorated with the {nameof(RequireUsingAttribute)} attribute must inherit from IDisposable or IDisposableAsync",
                 "Type '{0}' must support IDisposable or IDisposableAsync to apply the attribute to it",
                 "Usage",
