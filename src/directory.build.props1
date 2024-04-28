@@ -6,7 +6,7 @@
 		</Properties>
 		
 		<Properties>
-			<LangVersion>latest</LangVersion>
+			<LangVersion>12</LangVersion>
 			<ImplicitUsings>enable</ImplicitUsings>
 			<Nullable>enable</Nullable>
 			<TreatWarningsAsErrors>true</TreatWarningsAsErrors>

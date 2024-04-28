@@ -59,7 +59,7 @@
                 return;
             }
 
-            if (!HasAttribute(classSymbol))
+            if (!HasAttribute<RequireUsingAttribute>(classSymbol))
                 return;
 
             // Check if the class implements IDisposable or IAsyncDisposable
@@ -85,7 +85,12 @@
                 return;
             }
 
-            if (HasAttribute(typeSymbol))
+            if (IsExcludedFromUsing(objectCreation, context))
+            {
+                return;
+            }
+
+            if (HasAttribute<RequireUsingAttribute>(typeSymbol))
             {
                 // Verify 'using' context and report diagnostics as needed
                 CheckUsingContext(typeSymbol.Name, objectCreation, context);
@@ -103,15 +108,47 @@
                 return;
             }
 
-            if (HasAttribute(methodSymbol))
+            //if (IsExcludedFromUsing(invocationExpression, context))
+            //{
+            //    return;
+            //}
+
+            if (HasAttribute<RequireUsingAttribute>(methodSymbol))
             {
                 // Verify 'using' context and report diagnostics as needed
                 CheckUsingContext(methodSymbol.Name, invocationExpression, context);
             }
         }
 
-        private static bool HasAttribute(ISymbol typeSymbol)
-            => typeSymbol.GetAttributes().Any(attr => attr.AttributeClass?.Name == "RequireUsingAttribute");
+        private static bool IsExcludedFromUsing(ExpressionSyntax objectCreation, SyntaxNodeAnalysisContext context)
+        {
+            var parent = objectCreation.Parent;
+
+            // Check if the parent is an argument to a method invocation
+            if (parent is ArgumentSyntax argument && argument.Parent is ArgumentListSyntax argumentList)
+            {
+                if (argumentList.Parent is InvocationExpressionSyntax invocation)
+                {
+                    var methodSymbol = context.SemanticModel.GetSymbolInfo(invocation.Expression).Symbol as IMethodSymbol;
+
+                    // Get the attributes to see if it's method that 
+                    if ((methodSymbol?.Name == nameof(SubtleEngineeringExtensions.ExcludeFromUsing) || methodSymbol?.Name == nameof(SubtleEngineeringExtensions.ExcludeFromUsingAsync)) &&
+                        methodSymbol.ContainingType.Name == nameof(SubtleEngineeringExtensions))
+                    {
+                        return true;
+                    }
+                }
+            }
+
+            return false;
+        }
+
+        private static bool HasAttribute(ISymbol typeSymbol, string name)
+            => typeSymbol.GetAttributes().Any(attr => attr.AttributeClass?.Name == name);
+
+        private static bool HasAttribute<T>(ISymbol typeSymbol)
+            where T : Attribute
+            => typeSymbol.GetAttributes().Any(attr => attr.AttributeClass?.Name == typeof(T).Name);
 
         // Common method to check 'using' context and report diagnostics
         private static void CheckUsingContext(string symbolUsed, SyntaxNode node, SyntaxNodeAnalysisContext context)
