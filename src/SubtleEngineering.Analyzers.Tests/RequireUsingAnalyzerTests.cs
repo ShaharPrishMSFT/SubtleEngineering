@@ -26,6 +26,53 @@ public class RequireUsingAnalyzerTests
         await sut.RunAsync();
     }
 
+    [Fact]
+    public async Task TestCorrectUsageOfRequireAttribute()
+    {
+        const string code = """
+            using SubtleEngineering.Analyzers.Decorators;
+            using System;
+            [RequireUsing]
+            public class MyClass : IDisposable
+            {
+            }
+            """;
+
+        var sut = CreateSut(code, []);
+        await sut.RunAsync();
+    }
+
+    [Fact]
+    public async Task TestSimpleBadCreationCase()
+    {
+        const string code = """
+            using SubtleEngineering.Analyzers.Decorators;
+            using System;
+            [RequireUsing]
+            public class MyClass : IDisposable
+            {
+                public void Dispose()
+                {
+                }
+            }
+
+            public class Program
+            {
+                public static void Main()
+                {
+                    var myClass = new MyClass();
+                }
+            }
+            """;
+
+        var expected = VerifyCS.Diagnostic(
+            RequireUsingAnalyzer.Rules.Find(DiagnosticIds.TypeMustBeInstantiatedWithinAUsingStatement))
+                .WithLocation(3, 14)
+                .WithArguments("MyClass");
+        var sut = CreateSut(code, [expected]);
+        await sut.RunAsync();
+    }
+
     private VerifyCS.Test CreateSut(string code, List<DiagnosticResult> expected)
     {
         var test = new VerifyCS.Test()
