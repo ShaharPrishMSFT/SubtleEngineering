@@ -2,6 +2,8 @@
 {
     using System;
     using System.Collections.Generic;
+    using System.Collections.Immutable;
+    using System.Linq;
     using System.Text;
     using Microsoft.CodeAnalysis;
 
@@ -16,5 +18,8 @@
 
         public static bool FuzzyIsTypeOf(this ITypeSymbol symbol, string typeName)
             => symbol.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat).EndsWith($".{typeName}");
+
+        public static DiagnosticDescriptor Find(this ImmutableArray<DiagnosticDescriptor> rules, string id)
+            => rules.Single(r => r.Id == id);
     }
 }

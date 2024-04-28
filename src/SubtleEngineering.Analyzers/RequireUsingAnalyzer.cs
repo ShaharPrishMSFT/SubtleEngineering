@@ -18,7 +18,7 @@
         private const int SE1000 = 0;
         private const int SE1001 = 1;
 
-        private static readonly ImmutableArray<DiagnosticDescriptor> Rule = ImmutableArray.Create(
+        public static readonly ImmutableArray<DiagnosticDescriptor> Rules = ImmutableArray.Create(
             new DiagnosticDescriptor(
                 DiagnosticIds.TypeMustBeInstantiatedWithinAUsingStatement,
                 "Type must be instantiated within a using statement",
@@ -35,7 +35,7 @@
                 isEnabledByDefault: true)
             );
 
-        public override ImmutableArray<DiagnosticDescriptor> SupportedDiagnostics => Rule;
+        public override ImmutableArray<DiagnosticDescriptor> SupportedDiagnostics => Rules;
 
 
         public override void Initialize(AnalysisContext context)
@@ -68,7 +68,7 @@
             if (!implementsIDisposable)
             {
                 // If the class does not implement the required interfaces, report a diagnostic
-                var diagnostic = Diagnostic.Create(Rule[SE1001], classDeclaration.Identifier.GetLocation(), classSymbol.Name);
+                var diagnostic = Diagnostic.Create(Rules[SE1001], classDeclaration.Identifier.GetLocation(), classSymbol.Name);
 
                 context.ReportDiagnostic(diagnostic);
             }
@@ -156,7 +156,7 @@
             // Logic to determine if node is within a 'using' statement or declaration
             if (!IsInUsingContext(node))
             {
-                var diagnostic = Diagnostic.Create(Rule[SE1000], node.GetLocation(), symbolUsed);
+                var diagnostic = Diagnostic.Create(Rules[SE1000], node.GetLocation(), symbolUsed);
                 context.ReportDiagnostic(diagnostic);
             }
         }

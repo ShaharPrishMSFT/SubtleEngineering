@@ -1,36 +1,48 @@
 namespace SubtleEngineering.Analyzers.Tests;
 
-using RoslynTestKit;
+using VerifyCS = CSharpAnalyzerVerifier<RequireUsingAnalyzer>;
 using SubtleEngineering.Analyzers.Decorators;
+using Microsoft.CodeAnalysis.Testing;
+using Microsoft.CodeAnalysis;
 
 public class RequireUsingAnalyzerTests
 {
     [Fact]
-    public void TestMisuseOfRequireAttribute()
+    public async Task TestMisuseOfRequireAttribute()
     {
         const string code = """
             using SubtleEngineering.Analyzers.Decorators;
             [RequireUsing]
-            public class [|MyClass|]
+            public class MyClass
             {
             }
             """;
-        var sut = CreateSut();
 
-        sut.HasDiagnostic(code, DiagnosticIds.TypesDecoratedWithTheRequireUsingAttributeMustInheritFromIDisposable);
+        var expected = VerifyCS.Diagnostic(
+            RequireUsingAnalyzer.Rules.Find(DiagnosticIds.TypesDecoratedWithTheRequireUsingAttributeMustInheritFromIDisposable))
+                .WithLocation(3, 14)
+                .WithArguments("MyClass");
+        var sut = CreateSut(code, [expected]);
+        await sut.RunAsync();
     }
 
-    public AnalyzerTestFixture CreateSut()
+    private VerifyCS.Test CreateSut(string code, List<DiagnosticResult> expected)
     {
-        var fixture = RoslynFixtureFactory.Create<RequireUsingAnalyzer>(
-            new AnalyzerTestFixtureConfig()
+        var test = new VerifyCS.Test()
+        {
+            ReferenceAssemblies = ReferenceAssemblies.Net.Net50,
+            TestState =
             {
-                References = [
-                    ReferenceSource.FromType<RequireUsingAttribute>(),
-                    // ReferenceSource.FromType<Attribute>(),
-                    ],
-            });
+                Sources = { code },
+                AdditionalReferences =
+                {
+                    MetadataReference.CreateFromFile(typeof(RequireUsingAttribute).Assembly.Location),
+                },
+            }
+        };
 
-        return fixture;
+        test.ExpectedDiagnostics.AddRange(expected);
+
+        return test;
     }
 }

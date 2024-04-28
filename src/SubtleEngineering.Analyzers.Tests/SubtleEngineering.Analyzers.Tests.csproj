@@ -1,10 +1,14 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
 	<PropertyGroup>
-		<TargetFramework>net8.0</TargetFramework>
+		<TargetFramework>netcoreapp3.1</TargetFramework>
+
+		<AutoGenerateBindingRedirects>true</AutoGenerateBindingRedirects>
+		<GenerateBindingRedirectsOutputType>true</GenerateBindingRedirectsOutputType>
+		
 		<ImplicitUsings>enable</ImplicitUsings>
 		<Nullable>enable</Nullable>
-
+		<LangVersion>12</LangVersion>
 		<IsPackable>false</IsPackable>
 		<IsTestProject>true</IsTestProject>
 	</PropertyGroup>
@@ -12,17 +16,26 @@
 	<ItemGroup>
 		<PackageReference Include="coverlet.collector" />
 		<PackageReference Include="Microsoft.NET.Test.Sdk" />
-		<PackageReference Include="SmartAnalyzers.RoslynTestKit" />
+		<PackageReference Include="xunit" />
+		<!--<PackageReference Include="SmartAnalyzers.RoslynTestKit" />-->
 		<PackageReference Include="Microsoft.CodeAnalysis"/>
-		<PackageReference Include="Microsoft.CodeAnalysis.Common"/>
+		<!--<PackageReference Include="Microsoft.CodeAnalysis.Common"/>
 		<PackageReference Include="Microsoft.CodeAnalysis.CSharp.Workspaces"/>
 		<PackageReference Include="Microsoft.CodeAnalysis.Features" />
 		<PackageReference Include="Microsoft.CodeAnalysis.VisualBasic.Workspaces" />
 		<PackageReference Include="Microsoft.CodeAnalysis.VisualBasic"/>
 		<PackageReference Include="Microsoft.CodeAnalysis.Workspaces.Common"/>
-		<PackageReference Include="Microsoft.CodeAnalysis.Scripting.Common" />
-		<PackageReference Include="xunit" />
-		<PackageReference Include="xunit.runner.visualstudio" />
+		<PackageReference Include="Microsoft.CodeAnalysis.Scripting.Common" />-->
+		<PackageReference Include="Microsoft.CodeAnalysis.CSharp.Analyzer.Testing.MSTest" />
+		<PackageReference Include="Microsoft.CodeAnalysis.CSharp.CodeFix.Testing.MSTest" />
+		<PackageReference Include="Microsoft.CodeAnalysis.CSharp.CodeRefactoring.Testing.MSTest" />
+		<PackageReference Include="Microsoft.CodeAnalysis.VisualBasic.Analyzer.Testing.MSTest" />
+		<PackageReference Include="Microsoft.CodeAnalysis.VisualBasic.CodeFix.Testing.MSTest" />
+		<PackageReference Include="Microsoft.CodeAnalysis.VisualBasic.CodeRefactoring.Testing.MSTest" />
+		<PackageReference Include="xunit.runner.visualstudio">
+		  <PrivateAssets>all</PrivateAssets>
+		  <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+		</PackageReference>
 	</ItemGroup>
 
 	<ItemGroup>

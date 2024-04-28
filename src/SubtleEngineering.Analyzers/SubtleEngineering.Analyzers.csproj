@@ -15,8 +15,6 @@
             <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
         </PackageReference>
         <PackageReference Include="Microsoft.CodeAnalysis.CSharp" />
-        <PackageReference Include="Microsoft.CodeAnalysis.CSharp.Workspaces" />
-		<PackageReference Include="Microsoft.CodeAnalysis.Common"/>
     </ItemGroup>
     <ItemGroup>
         <ProjectReference Include="..\SubtleEngineering.Analyzers.Decorators\SubtleEngineering.Analyzers.Decorators.csproj" />
