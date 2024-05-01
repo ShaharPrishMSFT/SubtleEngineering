@@ -108,10 +108,10 @@
                 return;
             }
 
-            //if (IsExcludedFromUsing(invocationExpression, context))
-            //{
-            //    return;
-            //}
+            if (IsExcludedFromUsing(invocationExpression, context))
+            {
+                return;
+            }
 
             if (HasAttribute<RequireUsingAttribute>(methodSymbol))
             {
@@ -120,14 +120,14 @@
             }
         }
 
-        private static bool IsExcludedFromUsing(ExpressionSyntax objectCreation, SyntaxNodeAnalysisContext context)
+        private static bool IsExcludedFromUsing(ExpressionSyntax usageExpression, SyntaxNodeAnalysisContext context)
         {
-            var parent = objectCreation.Parent;
+            var parent = usageExpression.Parent;
 
             // Check if the parent is an argument to a method invocation
-            if (parent is ArgumentSyntax argument && argument.Parent is ArgumentListSyntax argumentList)
+            if (parent is MemberAccessExpressionSyntax memberAccess)
             {
-                if (argumentList.Parent is InvocationExpressionSyntax invocation)
+                if (parent.Parent is InvocationExpressionSyntax invocation)
                 {
                     var methodSymbol = context.SemanticModel.GetSymbolInfo(invocation.Expression).Symbol as IMethodSymbol;
 

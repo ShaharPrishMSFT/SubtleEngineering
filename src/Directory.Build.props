@@ -1,8 +1,8 @@
 <Project>
 	<PropertyGroup>
 		<Properties>
-			<AnalyzersVersion>0.1.0-alpha1</AnalyzersVersion>
-			<DecoratorsVersion>0.1.0-alpha1</DecoratorsVersion>
+			<AnalyzersVersion>0.1.0-alpha2</AnalyzersVersion>
+			<DecoratorsVersion>0.1.0-alpha2</DecoratorsVersion>
 		</Properties>
 		
 		<Properties>

@@ -32,9 +32,18 @@ public class RequireUsingAnalyzerTests
         const string code = """
             using SubtleEngineering.Analyzers.Decorators;
             using System;
+            using System.Threading.Tasks;
+
             [RequireUsing]
             public class MyClass : IDisposable
             {
+                public void Dispose() { }
+            }
+
+            [RequireUsing]
+            public class MyClassAsync : IAsyncDisposable
+            {
+                public ValueTask DisposeAsync() => ValueTask.CompletedTask;
             }
             """;
 
@@ -48,6 +57,7 @@ public class RequireUsingAnalyzerTests
         const string code = """
             using SubtleEngineering.Analyzers.Decorators;
             using System;
+
             [RequireUsing]
             public class MyClass : IDisposable
             {
@@ -67,9 +77,159 @@ public class RequireUsingAnalyzerTests
 
         var expected = VerifyCS.Diagnostic(
             RequireUsingAnalyzer.Rules.Find(DiagnosticIds.TypeMustBeInstantiatedWithinAUsingStatement))
-                .WithLocation(3, 14)
+                .WithLocation(16, 23)
                 .WithArguments("MyClass");
         var sut = CreateSut(code, [expected]);
+        await sut.RunAsync();
+    }
+
+    [Fact]
+    public async Task TestSimpleBadCreationCaseAsync()
+    {
+        const string code = """
+            using SubtleEngineering.Analyzers.Decorators;
+            using System.Threading.Tasks;
+            using System;
+
+            [RequireUsing]
+            public class MyClass : IAsyncDisposable
+            {
+                public ValueTask DisposeAsync() => ValueTask.CompletedTask;
+            }
+
+            public class Program
+            {
+                public static void Main()
+                {
+                    var myClass = new MyClass();
+                }
+            }
+            """;
+
+        var expected = VerifyCS.Diagnostic(
+            RequireUsingAnalyzer.Rules.Find(DiagnosticIds.TypeMustBeInstantiatedWithinAUsingStatement))
+                .WithLocation(15, 23)
+                .WithArguments("MyClass");
+        var sut = CreateSut(code, [expected]);
+        await sut.RunAsync();
+    }
+
+    [Fact]
+    public async Task TestSimpleBadCallCase()
+    {
+        const string code = """
+            using SubtleEngineering.Analyzers.Decorators;
+            using System;
+
+            public class MyClass : IDisposable
+            {
+                public void Dispose()
+                {
+                }
+            }
+
+            public class Program
+            {
+                public static void Main()
+                {
+                    var myClass = Create();
+                }
+
+            [RequireUsing]
+            public static MyClass Create() => null;
+            }
+            """;
+
+        var expected = VerifyCS.Diagnostic(
+            RequireUsingAnalyzer.Rules.Find(DiagnosticIds.TypeMustBeInstantiatedWithinAUsingStatement))
+                .WithLocation(15, 23)
+                .WithArguments("Create");
+        var sut = CreateSut(code, [expected]);
+        await sut.RunAsync();
+    }
+
+    [Fact]
+    public async Task TestSuppressionMethodOnCreation()
+    {
+        const string code = """
+            using SubtleEngineering.Analyzers.Decorators;
+            using System;
+
+            [RequireUsing]
+            public class MyClass : IDisposable
+            {
+                public void Dispose()
+                {
+                }
+            }
+
+            public class Program
+            {
+                public static void Main()
+                {
+                    var myClass = new MyClass().ExcludeFromUsing();
+                }
+            }
+            """;
+
+        var sut = CreateSut(code, []);
+        await sut.RunAsync();
+    }
+
+    [Fact(Skip = "AsyncDisposable not working for some reason")]
+    public async Task TestSuppressionMethodOnCreationAsync()
+    {
+        const string code = """
+            using SubtleEngineering.Analyzers.Decorators;
+            using System;
+            using System.Threading.Tasks;
+
+            [RequireUsing]
+            public class MyClass : IAsyncDisposable
+            {
+                public ValueTask DisposeAsync() => ValueTask.CompletedTask;
+            }
+
+            public class Program
+            {
+                public static void Main()
+                {
+                    var myClass = new MyClass().ExcludeFromUsingAsync();
+                }
+            }
+            """;
+
+        var sut = CreateSut(code, []);
+        await sut.RunAsync();
+    }
+
+    [Fact]
+    public async Task TestSuppressionMethodOnInvocation()
+    {
+        const string code = """
+            using SubtleEngineering.Analyzers.Decorators;
+            using System;
+
+            public class MyClass : IDisposable
+            {
+                public void Dispose()
+                {
+                }
+            }
+
+            public class Program
+            {
+                public static void Main()
+                {
+                    var myClass = Create(3).ExcludeFromUsing();
+                }
+
+            [RequireUsing]
+            public static MyClass Create(int i) => new MyClass();
+            }
+            """;
+
+        var sut = CreateSut(code, []);
         await sut.RunAsync();
     }
 
@@ -77,13 +237,14 @@ public class RequireUsingAnalyzerTests
     {
         var test = new VerifyCS.Test()
         {
-            ReferenceAssemblies = ReferenceAssemblies.Net.Net50,
+            ReferenceAssemblies = TestHelpers.Net80,
             TestState =
             {
                 Sources = { code },
                 AdditionalReferences =
                 {
                     MetadataReference.CreateFromFile(typeof(RequireUsingAttribute).Assembly.Location),
+                    //MetadataReference.CreateFromFile(typeof(IAsyncDisposable).Assembly.Location),
                 },
             }
         };

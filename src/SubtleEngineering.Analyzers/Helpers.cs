@@ -10,7 +10,7 @@
     public static class Helpers
     {
         public static bool IsOfType(this ITypeSymbol symbol, Type type)
-            => symbol.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat) == type.FullName;
+            => symbol.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat).EndsWith(type.FullName);
 
         public static bool IsOfType<T>(this ITypeSymbol symbol)
             => symbol.IsOfType(typeof(T));

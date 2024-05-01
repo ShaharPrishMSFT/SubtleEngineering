@@ -1,7 +1,7 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
 	<PropertyGroup>
-		<TargetFramework>netcoreapp3.1</TargetFramework>
+		<TargetFramework>net8.0</TargetFramework>
 
 		<AutoGenerateBindingRedirects>true</AutoGenerateBindingRedirects>
 		<GenerateBindingRedirectsOutputType>true</GenerateBindingRedirectsOutputType>
@@ -14,11 +14,14 @@
 	</PropertyGroup>
 
 	<ItemGroup>
-		<PackageReference Include="coverlet.collector" />
+		<PackageReference Include="coverlet.collector">
+		  <PrivateAssets>all</PrivateAssets>
+		  <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+		</PackageReference>
 		<PackageReference Include="Microsoft.NET.Test.Sdk" />
 		<PackageReference Include="xunit" />
 		<!--<PackageReference Include="SmartAnalyzers.RoslynTestKit" />-->
-		<PackageReference Include="Microsoft.CodeAnalysis"/>
+		<PackageReference Include="Microsoft.CodeAnalysis" />
 		<!--<PackageReference Include="Microsoft.CodeAnalysis.Common"/>
 		<PackageReference Include="Microsoft.CodeAnalysis.CSharp.Workspaces"/>
 		<PackageReference Include="Microsoft.CodeAnalysis.Features" />
