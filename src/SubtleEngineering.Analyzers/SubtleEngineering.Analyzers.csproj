@@ -8,6 +8,11 @@
     <PropertyGroup Label="Package Info">
         <Title>SubtleEngineering.Analyzers</Title>
     </PropertyGroup>
+
+	<ItemGroup>
+		<None Include="bin\$(Configuration)\netstandard2.0\SubtleEngineering.Analyzers.dll" Pack="true" PackagePath="analyzers/dotnet/cs" />
+	</ItemGroup>
+	
     <ItemGroup>
         <PackageReference Include="Microsoft.Bcl.AsyncInterfaces" />
         <PackageReference Include="Microsoft.CodeAnalysis.Analyzers">
