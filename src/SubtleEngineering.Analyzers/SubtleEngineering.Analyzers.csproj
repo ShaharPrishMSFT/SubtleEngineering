@@ -18,8 +18,6 @@
     </ItemGroup>
     <ItemGroup>
 		<ProjectReference Include="..\SubtleEngineering.Analyzers.Decorators\SubtleEngineering.Analyzers.Decorators.csproj">
-			<PrivateAssets>All</PrivateAssets>
-			<IncludeAssets>Runtime; Build; Native; ContentFiles; Analyzers</IncludeAssets>
 		</ProjectReference>
     </ItemGroup>
 </Project>
