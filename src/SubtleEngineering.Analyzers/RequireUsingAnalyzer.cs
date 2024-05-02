@@ -17,6 +17,7 @@
     {
         private const int SE1000 = 0;
         private const int SE1001 = 1;
+        private const int SE1002 = 2;
 
         public static readonly ImmutableArray<DiagnosticDescriptor> Rules = ImmutableArray.Create(
             new DiagnosticDescriptor(
@@ -32,6 +33,13 @@
                 "Type '{0}' must support IDisposable or IDisposableAsync to apply the attribute to it",
                 "Usage",
                 DiagnosticSeverity.Warning,
+                isEnabledByDefault: true),
+            new DiagnosticDescriptor(
+                DiagnosticIds.MethodsReturnsDecoratedWithTheRequireUsingAttributeMustInheritFromIDisposable,
+                $"Methods decorated with the {nameof(RequireUsingAttribute)} attribute must have a return value tha inherits from IDisposable or IDisposableAsync",
+                "Method '{0}' must have a return type that supports IDisposable or IDisposableAsync to apply the attribute to it",
+                "Usage",
+                DiagnosticSeverity.Warning,
                 isEnabledByDefault: true)
             );
 
@@ -44,14 +52,40 @@
             context.EnableConcurrentExecution();
             context.RegisterSyntaxNodeAction(AnalyzeObjectCreation, SyntaxKind.ObjectCreationExpression);
             context.RegisterSyntaxNodeAction(AnalyzeInvocationExpression, SyntaxKind.InvocationExpression);
-            context.RegisterSyntaxNodeAction(AnalyzeMisuseOfAttribute, SyntaxKind.ClassDeclaration);
+            context.RegisterSyntaxNodeAction(AnalyzeMisuseOfAttributeClass, SyntaxKind.ClassDeclaration);
+            context.RegisterSyntaxNodeAction(AnalyzeMisuseOfAttributeMethod, SyntaxKind.MethodDeclaration);
         }
 
-        private void AnalyzeMisuseOfAttribute(SyntaxNodeAnalysisContext context)
+        private void AnalyzeMisuseOfAttributeMethod(SyntaxNodeAnalysisContext context)
+        {
+            var methodDeclaration = (MethodDeclarationSyntax)context.Node;
+
+            var methodSymbol = context.SemanticModel.GetDeclaredSymbol(methodDeclaration);
+
+            if (methodSymbol == null)
+            {
+                return;
+            }
+
+            if (HasAttribute<RequireUsingAttribute>(methodSymbol))
+            {
+                // Check if the method's return type implements IDisposable or IAsyncDisposable
+                var returnType = methodSymbol.ReturnType;
+
+                if (returnType != null && !IsOrInheritingFromDisposable(returnType))
+                {
+                    // If the method's return type does not implement the required interfaces, report a diagnostic
+                    var diagnostic = Diagnostic.Create(Rules[SE1002], methodDeclaration.ReturnType.GetLocation(), methodSymbol.Name);
+
+                    context.ReportDiagnostic(diagnostic);
+                }
+            }
+        }
+
+        private void AnalyzeMisuseOfAttributeClass(SyntaxNodeAnalysisContext context)
         {
             var classDeclaration = (ClassDeclarationSyntax)context.Node;
 
-            // Check if the class is decorated with the RequireUsingAttribute
             var classSymbol = context.SemanticModel.GetDeclaredSymbol(classDeclaration);
 
             if (classSymbol == null)
@@ -59,19 +93,24 @@
                 return;
             }
 
-            if (!HasAttribute<RequireUsingAttribute>(classSymbol))
-                return;
-
-            // Check if the class implements IDisposable or IAsyncDisposable
-            var implementsIDisposable = classSymbol.AllInterfaces.Any(i => i.IsOfType<IDisposable>() || i.FuzzyIsTypeOf("IAsyncDisposable"));
-
-            if (!implementsIDisposable)
+            if (HasAttribute<RequireUsingAttribute>(classSymbol))
             {
-                // If the class does not implement the required interfaces, report a diagnostic
-                var diagnostic = Diagnostic.Create(Rules[SE1001], classDeclaration.Identifier.GetLocation(), classSymbol.Name);
+                // Check if the class implements IDisposable or IAsyncDisposable
+                var implementsIDisposable = IsOrInheritingFromDisposable(classSymbol);
 
-                context.ReportDiagnostic(diagnostic);
+                if (!implementsIDisposable)
+                {
+                    // If the class does not implement the required interfaces, report a diagnostic
+                    var diagnostic = Diagnostic.Create(Rules[SE1001], classDeclaration.Identifier.GetLocation(), classSymbol.Name);
+
+                    context.ReportDiagnostic(diagnostic);
+                }
             }
+        }
+
+        private static bool IsOrInheritingFromDisposable(ITypeSymbol classSymbol)
+        {
+            return classSymbol.AllInterfaces.Append(classSymbol).Any(i => i.IsOfType<IDisposable>() || i.FuzzyIsTypeOf("IAsyncDisposable"));
         }
 
         private static void AnalyzeObjectCreation(SyntaxNodeAnalysisContext context)

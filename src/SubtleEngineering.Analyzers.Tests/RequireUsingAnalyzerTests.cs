@@ -15,14 +15,22 @@ public class RequireUsingAnalyzerTests
             [RequireUsing]
             public class MyClass
             {
+                [RequireUsing]
+                public static int Create() => 0;
             }
             """;
 
-        var expected = VerifyCS.Diagnostic(
-            RequireUsingAnalyzer.Rules.Find(DiagnosticIds.TypesDecoratedWithTheRequireUsingAttributeMustInheritFromIDisposable))
-                .WithLocation(3, 14)
-                .WithArguments("MyClass");
-        var sut = CreateSut(code, [expected]);
+        List<DiagnosticResult> expected = [
+            VerifyCS.Diagnostic(
+                RequireUsingAnalyzer.Rules.Find(DiagnosticIds.TypesDecoratedWithTheRequireUsingAttributeMustInheritFromIDisposable))
+                    .WithLocation(3, 14)
+                    .WithArguments("MyClass"),
+            VerifyCS.Diagnostic(
+                RequireUsingAnalyzer.Rules.Find(DiagnosticIds.MethodsReturnsDecoratedWithTheRequireUsingAttributeMustInheritFromIDisposable))
+                    .WithLocation(6, 19)
+                   .WithArguments("Create"),
+            ];
+        var sut = CreateSut(code, expected);
         await sut.RunAsync();
     }
 
@@ -38,13 +46,25 @@ public class RequireUsingAnalyzerTests
             public class MyClass : IDisposable
             {
                 public void Dispose() { }
+
+                [RequireUsing]
+                public static MyClass Create() => null;
+
+                [RequireUsing]
+                public static IDisposable CreateDisposable() => null;
             }
 
             [RequireUsing]
             public class MyClassAsync : IAsyncDisposable
             {
                 public ValueTask DisposeAsync() => ValueTask.CompletedTask;
-            }
+
+                [RequireUsing]
+                public static MyClassAsync Create() => null;
+            
+                [RequireUsing]
+                public static IAsyncDisposable CreateDisposable() => null;
+                        }
             """;
 
         var sut = CreateSut(code, []);
