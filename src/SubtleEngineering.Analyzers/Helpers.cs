@@ -23,7 +23,7 @@
         public static DiagnosticDescriptor Find(this ImmutableArray<DiagnosticDescriptor> rules, string id)
             => rules.Single(r => r.Id == id);
 
-        public static ITypeSymbol GetParameterTypeForArgument(this ArgumentSyntax argument, SemanticModel model)
+        public static ITypeSymbol GetParameterTypeForArgument(ArgumentSyntax argument, SemanticModel model)
         {
             // Get the invocation expression or object creation from the parent of the ArgumentSyntax
             var parentExpression = argument.Parent?.Parent as ExpressionSyntax;

@@ -1,13 +1,10 @@
 ﻿namespace SubtleEngineering.Analyzers
 {
     using System;
-    using System.Collections.Generic;
-    using System.Text;
     using Microsoft.CodeAnalysis.Diagnostics;
     using Microsoft.CodeAnalysis;
     using Microsoft.CodeAnalysis.CSharp.Syntax;
     using Microsoft.CodeAnalysis.CSharp;
-    using System.Data;
     using System.Linq;
     using System.Collections.Immutable;
     using SubtleEngineering.Analyzers.Decorators;
@@ -246,7 +243,7 @@
             {
                 if (current is LambdaExpressionSyntax lambda && lambda.Parent is ArgumentSyntax arg)
                 {
-                    ITypeSymbol symbolInfo = arg.GetParameterTypeForArgument(context.SemanticModel);
+                    ITypeSymbol symbolInfo = Helpers.GetParameterTypeForArgument(arg, context.SemanticModel);
                     if (symbolInfo.TypeKind == TypeKind.Class &&
                         symbolInfo.Name == "Expression")
                     {
