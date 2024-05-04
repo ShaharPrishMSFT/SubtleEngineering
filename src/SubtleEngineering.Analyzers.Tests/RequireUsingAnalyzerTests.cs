@@ -224,6 +224,36 @@ public class RequireUsingAnalyzerTests
     }
 
     [Fact]
+    public async Task BadCallInsideExpressionIsAllowed()
+    {
+        const string code = """
+            using SubtleEngineering.Analyzers.Decorators;
+            using System;
+
+            public class MyClass
+            {
+                [RequireUsing]
+                public static IDisposable Create() => null;
+            }
+
+            public class Program
+            {
+                public static void TakeExpression(System.Linq.Expressions.Expression<Action> expression)
+                {
+                }
+
+                public static void Main()
+                {
+                    TakeExpression(() => MyClass.Create());
+                }
+            }
+            """;
+
+        var sut = CreateSut(code, []);
+        await sut.RunAsync();
+    }
+
+    [Fact]
     public async Task TestSuppressionMethodOnInvocation()
     {
         const string code = """
@@ -252,7 +282,6 @@ public class RequireUsingAnalyzerTests
         var sut = CreateSut(code, []);
         await sut.RunAsync();
     }
-
     private VerifyCS.Test CreateSut(string code, List<DiagnosticResult> expected)
     {
         var test = new VerifyCS.Test()

@@ -124,14 +124,14 @@
                 return;
             }
 
-            if (IsExcludedFromUsing(objectCreation, context))
-            {
-                return;
-            }
-
             if (HasAttribute<RequireUsingAttribute>(typeSymbol))
             {
                 // Verify 'using' context and report diagnostics as needed
+                if (IsExcludedFromUsing(objectCreation, context))
+                {
+                    return;
+                }
+
                 CheckUsingContext(typeSymbol.Name, objectCreation, context);
             }
         }
@@ -147,13 +147,18 @@
                 return;
             }
 
-            if (IsExcludedFromUsing(invocationExpression, context))
-            {
-                return;
-            }
-
             if (HasAttribute<RequireUsingAttribute>(methodSymbol))
             {
+                if (IsExcludedFromUsing(invocationExpression, context))
+                {
+                    return;
+                }
+
+                if (IsInsideExpressionLambda(invocationExpression, context))
+                {
+                    return;
+                }
+
                 // Verify 'using' context and report diagnostics as needed
                 CheckUsingContext(methodSymbol.Name, invocationExpression, context);
             }
@@ -230,6 +235,25 @@
                         return true;
                     }
                 }
+            }
+            return false;
+        }
+
+        private static bool IsInsideExpressionLambda(SyntaxNode node, SyntaxNodeAnalysisContext context)
+        {
+            var current = node;
+            while (current != null)
+            {
+                if (current is LambdaExpressionSyntax lambda && lambda.Parent is ArgumentSyntax arg)
+                {
+                    ITypeSymbol symbolInfo = arg.GetParameterTypeForArgument(context.SemanticModel);
+                    if (symbolInfo.TypeKind == TypeKind.Class &&
+                        symbolInfo.Name == "Expression")
+                    {
+                        return true;
+                    }
+                }
+                current = current.Parent;
             }
             return false;
         }
