@@ -282,6 +282,48 @@ public class RequireUsingAnalyzerTests
         var sut = CreateSut(code, []);
         await sut.RunAsync();
     }
+
+    [Fact]
+    public async Task InterfaceImplInheritsAttribute()
+    {
+        const string code = """
+            using SubtleEngineering.Analyzers.Decorators;
+            using System;
+
+            public interface MyInterface
+            {
+                [RequireUsing]
+                IDisposable Method();
+            }
+
+            public class MyClass : MyInterface
+            {
+                public IDisposable Method() => null;
+            }
+
+            public class Program
+            {
+                public static void Main()
+                {
+                    var c = new MyClass();
+                    c.Method();
+                    var i = (MyInterface)c;
+                    i.Method();
+                }
+            }
+            """;
+
+        List<DiagnosticResult> expected = [
+            VerifyCS.Diagnostic(
+            RequireUsingAnalyzer.Rules.Find(DiagnosticIds.TypeMustBeInstantiatedWithinAUsingStatement))
+                .WithLocation(22, 9)
+                .WithArguments("Method"),
+                 ];
+
+        var sut = CreateSut(code, expected);
+        await sut.RunAsync();
+    }
+
     private VerifyCS.Test CreateSut(string code, List<DiagnosticResult> expected)
     {
         var test = new VerifyCS.Test()
