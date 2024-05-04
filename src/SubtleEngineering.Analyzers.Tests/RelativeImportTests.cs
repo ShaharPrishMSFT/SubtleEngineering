@@ -17,10 +17,6 @@ public class RelativeImportTests
 
             namespace A
             {
-            }
-
-            namespace A
-            {
                 using B.C;
             }
             """;
