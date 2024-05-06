@@ -1,4 +1,6 @@
-namespace SubtleEngineering.Analyzers.Tests;
+using SubtleEngineering.Analyzers.RequireUsing;
+
+namespace SubtleEngineering.Analyzers.Tests.RequireUsing;
 
 using VerifyCS = CSharpAnalyzerVerifier<RequireUsingAnalyzer>;
 using SubtleEngineering.Analyzers.Decorators;

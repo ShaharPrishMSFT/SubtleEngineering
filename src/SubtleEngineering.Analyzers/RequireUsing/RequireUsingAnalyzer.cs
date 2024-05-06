@@ -1,4 +1,4 @@
-﻿namespace SubtleEngineering.Analyzers
+﻿namespace SubtleEngineering.Analyzers.RequireUsing
 {
     using System;
     using Microsoft.CodeAnalysis.Diagnostics;

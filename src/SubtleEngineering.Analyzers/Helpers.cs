@@ -10,6 +10,10 @@
 
     public static class Helpers
     {
+        public static readonly SymbolDisplayFormat FullyQualifiedNamespaceFormat = new SymbolDisplayFormat(
+            typeQualificationStyle: SymbolDisplayTypeQualificationStyle.NameAndContainingTypesAndNamespaces,
+            globalNamespaceStyle: SymbolDisplayGlobalNamespaceStyle.Omitted);
+
         public static bool IsOfType(this ITypeSymbol symbol, Type type)
             => symbol.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat).EndsWith(type.FullName);
 

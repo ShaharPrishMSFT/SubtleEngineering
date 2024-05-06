@@ -1,4 +1,4 @@
-﻿namespace SubtleEngineering.Analyzers
+﻿namespace SubtleEngineering.Analyzers.RelativeImport
 {
     using System;
     using System.Collections.Generic;
@@ -16,10 +16,6 @@
     public class RelativeImportAnalyzer : DiagnosticAnalyzer
     {
         private const int SE1010 = 0;
-
-        private static readonly SymbolDisplayFormat NamespaceFormat = new SymbolDisplayFormat(
-            typeQualificationStyle: SymbolDisplayTypeQualificationStyle.NameAndContainingTypesAndNamespaces,
-            globalNamespaceStyle: SymbolDisplayGlobalNamespaceStyle.Omitted);
 
         public static readonly ImmutableArray<DiagnosticDescriptor> Rules = ImmutableArray.Create(
             new DiagnosticDescriptor(
@@ -45,13 +41,12 @@
         {
             var node = (UsingDirectiveSyntax)context.Node;
             var symbol = context.SemanticModel.GetSymbolInfo(node.Name);
-            var fullyQualified = symbol.Symbol.ToDisplayString(NamespaceFormat);
+            var fullyQualified = symbol.Symbol.ToDisplayString(Helpers.FullyQualifiedNamespaceFormat);
             if (node.Alias == null && fullyQualified != node.Name.ToString() && fullyQualified.EndsWith(node.Name.ToString()))
             {
                 var diagnostic = Diagnostic.Create(Rules[SE1010], node.GetLocation(), node.Name, fullyQualified);
                 context.ReportDiagnostic(diagnostic);
             }
-
         }
     }
 }

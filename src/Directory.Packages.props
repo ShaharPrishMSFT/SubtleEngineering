@@ -1,6 +1,6 @@
-﻿<!--This project was modified by VsSolutions.Tools.SolForge (https://github.com/ShaharPrishMSFT/VsSolutions.Tools/)-->
+﻿<!--This project was modified by VsSolutions.Tools.SolForge (https://github.com/ShaharPrishMSFT/VsSolutions.Tools/) -->
+  <!--For more info on shared project properties, see https://learn.microsoft.com/en-us/nuget/consume-packages/Central-Package-Management -->
 <Project>
-  <!--For more info on shared project properties, see https://learn.microsoft.com/en-us/nuget/consume-packages/Central-Package-Management-->
   <PropertyGroup>
     <ManagePackageVersionsCentrally>true</ManagePackageVersionsCentrally>
   </PropertyGroup>
@@ -24,7 +24,7 @@
     <!--<PackageVersion Include="Microsoft.CodeAnalysis.Common" Version="3.3.1" />-->
     <PackageVersion Include="Microsoft.CodeAnalysis.CSharp" Version="4.9.2" />
     <!--<PackageVersion Include="Microsoft.CodeAnalysis.VisualBasic" Version="3.3.1" />-->
-    <!--<PackageVersion Include="Microsoft.CodeAnalysis.CSharp.Workspaces" Version="3.3.1" />-->
+    <PackageVersion Include="Microsoft.CodeAnalysis.CSharp.Workspaces" Version="4.9.2" />
     <!--<PackageVersion Include="Microsoft.CodeAnalysis.VisualBasic.Workspaces" Version="3.3.1" />-->
     <!--<PackageVersion Include="Microsoft.CodeAnalysis.Workspaces.Common" Version="3.3.1" />-->
     <!--<PackageVersion Include="Microsoft.CodeAnalysis.Scripting.Common" Version="3.3.1" />-->
