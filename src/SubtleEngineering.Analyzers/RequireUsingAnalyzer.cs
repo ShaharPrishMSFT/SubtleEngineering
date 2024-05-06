@@ -20,7 +20,7 @@
             new DiagnosticDescriptor(
                 DiagnosticIds.TypeMustBeInstantiatedWithinAUsingStatement,
                 "Type must be instantiated within a using statement",
-                "Type or method '{0}' must only be instantiated or called within a using statement or using declaration",
+                "Type or method '{0}' must only be instantiated or called within a using statement or using declaration. Use the ExcludeFromUsing and ExcludeFromUsingAsync extension method on the IDisposable to mark that you will take care of disposing of it.",
                 "Usage",
                 DiagnosticSeverity.Warning,
                 isEnabledByDefault: true),
