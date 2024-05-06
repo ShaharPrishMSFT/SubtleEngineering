@@ -12,16 +12,10 @@
 	</PropertyGroup>
 
 	<ItemGroup>
-	  <Compile Remove="NewFolder\**" />
-	  <Compile Remove="RequireUsing\**" />
-	  <EmbeddedResource Remove="NewFolder\**" />
-	  <EmbeddedResource Remove="RequireUsing\**" />
-	  <None Remove="NewFolder\**" />
-	  <None Remove="RequireUsing\**" />
 	</ItemGroup>
 
 	<ItemGroup>
-	  <PackageReference Include="Microsoft.Bcl.AsyncInterfaces" />
+	  <PackageReference Include="Microsoft.Bcl.AsyncInterfaces" PrivateAssets="All"/>
 	</ItemGroup>
 
 </Project>
