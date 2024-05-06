@@ -26,3 +26,6 @@ Set of analyzers for a better engineering experience.
 **What it looks for**: This analyzer checks for using statements that import relative namespaces.
 **Why**: Using relative namespaces in using directives can lead to confusion and can be prone to errors as the codebase evolves or copied around. In some cases, with classes that have popular names, this may actually silently add bugs.
 **How it helps engineering**: By enforcing the use of absolute namespace paths in using directives, it helps to ensure that the correct namespaces are being used, which can increase the readability and maintainability of the codebase.
+
+#### Code fix available
+A code fix is available for SE1010 - changing the relative namespace into an absolute one.
