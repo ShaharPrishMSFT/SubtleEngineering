@@ -1,11 +1,13 @@
-namespace SubtleEngineering.Analyzers.Tests;
+using SubtleEngineering.Analyzers.RelativeImport;
 
-using VerifyCS = CSharpAnalyzerVerifier<RelativeImportAnalyzer>;
+namespace SubtleEngineering.Analyzers.Tests.RelativeImport;
+
+using VerifyAn = CSharpAnalyzerVerifier<RelativeImportAnalyzer>;
 using SubtleEngineering.Analyzers.Decorators;
 using Microsoft.CodeAnalysis.Testing;
 using Microsoft.CodeAnalysis;
 
-public class RelativeImportTests
+public class RelativeImportAnalyzerTests
 {
     [Fact]
     public async Task BadRelativeNamespace()
@@ -22,7 +24,7 @@ public class RelativeImportTests
             """;
 
         List<DiagnosticResult> expected = [
-            VerifyCS.Diagnostic(
+            VerifyAn.Diagnostic(
                 RelativeImportAnalyzer.Rules.Find(DiagnosticIds.DoNotUseRelativeImportUsingStatements))
                     .WithLocation(7, 5)
                     .WithArguments("B.C", "A.B.C"),
@@ -48,12 +50,11 @@ public class RelativeImportTests
 
         var sut = CreateSut(code, []);
         await sut.RunAsync();
-
     }
 
-    private VerifyCS.Test CreateSut(string code, List<DiagnosticResult> expected)
+    private VerifyAn.Test CreateSut(string code, List<DiagnosticResult> expected)
     {
-        var test = new VerifyCS.Test()
+        var test = new VerifyAn.Test()
         {
             ReferenceAssemblies = TestHelpers.Net80,
             TestState =
@@ -67,7 +68,6 @@ public class RelativeImportTests
             }
         };
 
-        test.ExpectedDiagnostics.AddRange(expected);
 
         return test;
     }
