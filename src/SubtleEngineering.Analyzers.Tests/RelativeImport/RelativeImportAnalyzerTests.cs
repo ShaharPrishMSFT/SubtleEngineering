@@ -23,13 +23,12 @@ public class RelativeImportAnalyzerTests
             }
             """;
 
-        List<DiagnosticResult> expected = [
+        var expected =
             VerifyAn.Diagnostic(
                 RelativeImportAnalyzer.Rules.Find(DiagnosticIds.DoNotUseRelativeImportUsingStatements))
                     .WithLocation(7, 5)
-                    .WithArguments("B.C", "A.B.C"),
-            ];
-        var sut = CreateSut(code, expected);
+                    .WithArguments("B.C", "A.B.C");
+        var sut = CreateSut(code, [expected]);
         await sut.RunAsync();
 
     }
@@ -68,6 +67,7 @@ public class RelativeImportAnalyzerTests
             }
         };
 
+        test.ExpectedDiagnostics.AddRange(expected);
 
         return test;
     }
