@@ -1,7 +1,5 @@
 ﻿namespace SubtleEngineering.Analyzers
 {
-    using System;
-
     public class DiagnosticIds
     {
         public const string TypeMustBeInstantiatedWithinAUsingStatement = "SE1000";

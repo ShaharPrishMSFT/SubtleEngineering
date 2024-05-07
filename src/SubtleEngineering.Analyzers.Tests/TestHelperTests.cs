@@ -1,9 +1,8 @@
 ﻿namespace SubtleEngineering.Analyzers.Tests;
-using System;
-using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+using Microsoft.CodeAnalysis.CSharp;
+using Microsoft.CodeAnalysis;
+using FluentAssertions;
 
 public class TestHelperTests
 {
@@ -14,8 +13,8 @@ public class TestHelperTests
     [InlineData($"var x = 1; // [|var y = 2;|]", new string[] { "1,11" })]
     [InlineData($"var x = 1; // [|var y = 2;|]{Br}[|var x = 1|]; // var y = 2;", new string[] { "1,11", "2,25" })]
     [InlineData($"[|var x = 1|]; // [|var y = 2;|]{Br}[|var x = 1|]; // var y = 2;", new string[] { "1,1", "1,10", "2,24" })]
-    [InlineData("", new string[] {  })]
-    [InlineData($"var x = 1; // var y = 2;", new string[] {  })]
+    [InlineData("", new string[] { })]
+    [InlineData($"var x = 1; // var y = 2;", new string[] { })]
     public void LocationParsingWorks(string code, string[] expectedStrings)
     {
         var parsed = TestHelpers.ParseCodeLocations(code);
@@ -26,4 +25,65 @@ public class TestHelperTests
         string expectedCode = code.Replace("[|", "").Replace("|]", "");
         Assert.Equal(expectedCode, parsed.ActualCode);
     }
+
+    [Theory]
+    [InlineData("System.IDisposable")]
+    [InlineData("TestNamespace.MyBaseClass")]
+    public void IsAssignableTo_ReturnsTrue_WhenTypeIsAssignable(string typeToCheck)
+    {
+        // Arrange
+        var sourceCode = @"
+            using System;
+            namespace TestNamespace
+            {
+                public class MyBaseClass : IDisposable
+                {
+                    public void Dispose() { }
+                }
+                public class MyDerivedClass : MyBaseClass {}
+            }";
+
+        var compilation = CreateCompilation(sourceCode);
+        var typeSymbol = GetTypeSymbol(compilation, "TestNamespace.MyDerivedClass");
+
+        // Act
+        typeSymbol.IsAssignableTo(typeToCheck).Should().BeTrue();
+    }
+
+    [Fact]
+    public void IsAssignableTo_ReturnsFalse_WhenTypeIsNotAssignable()
+    {
+        // Arrange
+        var sourceCode = @"
+            namespace TestNamespace
+            {
+                public class MyBaseClass {}
+                public class MyDerivedClass : MyBaseClass {}
+            }";
+
+        var compilation = CreateCompilation(sourceCode);
+        var typeSymbol = GetTypeSymbol(compilation, "TestNamespace.MyDerivedClass");
+        var typeToCheck = typeof(IDisposable);
+
+        // Act
+        var result = typeSymbol.IsAssignableTo(typeToCheck);
+
+        // Assert
+        result.Should().BeFalse();
+    }
+
+    private static Compilation CreateCompilation(string sourceCode)
+    {
+        var c = CSharpCompilation.Create("TestAssembly",
+            new[] { CSharpSyntaxTree.ParseText(sourceCode) },
+            new[] { MetadataReference.CreateFromFile(typeof(object).Assembly.Location) },
+            new CSharpCompilationOptions(OutputKind.DynamicallyLinkedLibrary));
+
+        c.GetDiagnostics().Should().BeEmpty();
+
+        return c;
+    }
+
+    private static ITypeSymbol GetTypeSymbol(Compilation compilation, string fullyQualifiedName)
+        => compilation.GetTypeByMetadataName(fullyQualifiedName) ?? throw new InvalidOperationException();
 }

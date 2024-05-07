@@ -1,12 +1,11 @@
 ﻿namespace SubtleEngineering.Analyzers
 {
     using System;
-    using System.Collections.Generic;
     using System.Collections.Immutable;
     using System.Linq;
-    using System.Text;
     using Microsoft.CodeAnalysis;
     using Microsoft.CodeAnalysis.CSharp.Syntax;
+    using Microsoft.CodeAnalysis.FlowAnalysis;
 
     public static class Helpers
     {
@@ -14,8 +13,11 @@
             typeQualificationStyle: SymbolDisplayTypeQualificationStyle.NameAndContainingTypesAndNamespaces,
             globalNamespaceStyle: SymbolDisplayGlobalNamespaceStyle.Omitted);
 
+        public static bool IsOfType(this ITypeSymbol symbol, string fullName)
+            => symbol.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat).EndsWith(fullName);
+
         public static bool IsOfType(this ITypeSymbol symbol, Type type)
-            => symbol.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat).EndsWith(type.FullName);
+            => symbol.IsOfType(type.FullName);
 
         public static bool IsOfType<T>(this ITypeSymbol symbol)
             => symbol.IsOfType(typeof(T));
@@ -26,6 +28,34 @@
 
         public static DiagnosticDescriptor Find(this ImmutableArray<DiagnosticDescriptor> rules, string id)
             => rules.Single(r => r.Id == id);
+
+        public static bool IsAssignableTo<T>(this ITypeSymbol symbol)
+            => symbol.IsAssignableTo(typeof(T));
+
+        public static bool IsAssignableTo(this ITypeSymbol symbol, Type type)
+            => symbol.IsAssignableTo(type.FullName);
+
+        public static bool IsAssignableTo(this ITypeSymbol symbol, string soughtFullName)
+        {
+            // Go through all base types and interfaces of each base type and see if it matches the type
+            var current = symbol;
+            while (current != null)
+            {
+                if (current.IsOfType(soughtFullName))
+                {
+                    return true;
+                }
+
+                if (current.AllInterfaces.Any(x => x.IsOfType(soughtFullName)))
+                {
+                    return true;
+                }
+
+                current = current.BaseType;
+            }
+
+            return false;
+        }
 
         public static ITypeSymbol GetParameterTypeForArgument(ArgumentSyntax argument, SemanticModel model)
         {

@@ -1,10 +1,11 @@
 ﻿<!--This project was modified by VsSolutions.Tools.SolForge (https://github.com/ShaharPrishMSFT/VsSolutions.Tools/) -->
-  <!--For more info on shared project properties, see https://learn.microsoft.com/en-us/nuget/consume-packages/Central-Package-Management -->
+<!--For more info on shared project properties, see https://learn.microsoft.com/en-us/nuget/consume-packages/Central-Package-Management -->
 <Project>
   <PropertyGroup>
     <ManagePackageVersionsCentrally>true</ManagePackageVersionsCentrally>
   </PropertyGroup>
   <ItemGroup>
+    <PackageVersion Include="FluentAssertions" Version="6.12.0" />
     <PackageVersion Include="Microsoft.Bcl.AsyncInterfaces" Version="8.0.0" />
     <PackageVersion Include="Microsoft.CodeAnalysis.Analyzers" Version="3.3.4" />
     <PackageVersion Include="coverlet.collector" Version="6.0.2" />

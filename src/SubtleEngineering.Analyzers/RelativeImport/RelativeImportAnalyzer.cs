@@ -1,16 +1,10 @@
 ﻿namespace SubtleEngineering.Analyzers.RelativeImport
 {
-    using System;
-    using System.Collections.Generic;
-    using System.Text;
     using Microsoft.CodeAnalysis.Diagnostics;
     using Microsoft.CodeAnalysis;
     using Microsoft.CodeAnalysis.CSharp.Syntax;
     using Microsoft.CodeAnalysis.CSharp;
-    using System.Data;
-    using System.Linq;
     using System.Collections.Immutable;
-    using SubtleEngineering.Analyzers.Decorators;
 
     [DiagnosticAnalyzer(LanguageNames.CSharp)]
     public class RelativeImportAnalyzer : DiagnosticAnalyzer

@@ -1,8 +1,6 @@
 ﻿namespace SubtleEngineering.Analyzers.Decorators
 {
     using System;
-    using System.Collections.Generic;
-    using System.Text;
 
     public static class SubtleEngineeringExtensions
     {

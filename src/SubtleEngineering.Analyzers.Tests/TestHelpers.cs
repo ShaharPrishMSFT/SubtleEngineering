@@ -1,13 +1,10 @@
 ﻿namespace SubtleEngineering.Analyzers.Tests;
 using System;
 using System.Collections.Generic;
-using System.ComponentModel.DataAnnotations;
 using System.Linq;
 using System.Text;
-using System.Threading.Tasks;
 using Microsoft.CodeAnalysis.Testing;
 using Microsoft.CodeAnalysis.Text;
-using static Microsoft.CodeAnalysis.Testing.ReferenceAssemblies;
 
 internal static class TestHelpers
 {

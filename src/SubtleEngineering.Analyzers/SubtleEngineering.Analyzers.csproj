@@ -15,12 +15,12 @@
 	</ItemGroup>
 	
     <ItemGroup>
-        <PackageReference Include="Microsoft.Bcl.AsyncInterfaces" PrivateAssets="all"/>
+        <PackageReference Include="Microsoft.Bcl.AsyncInterfaces" PrivateAssets="all" />
         <PackageReference Include="Microsoft.CodeAnalysis.Analyzers">
             <PrivateAssets>all</PrivateAssets>
             <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
         </PackageReference>
-        <PackageReference Include="Microsoft.CodeAnalysis.CSharp" PrivateAssets="all"/>
+        <PackageReference Include="Microsoft.CodeAnalysis.CSharp" PrivateAssets="all" />
 		<PackageReference Include="Microsoft.CodeAnalysis.CSharp.Workspaces" PrivateAssets="all" />
 	</ItemGroup>
     <ItemGroup>

@@ -6,7 +6,6 @@ using VerifyCf = CSharpCodeFixVerifier<RelativeImportAnalyzer, RelativeImportCod
 using SubtleEngineering.Analyzers.Decorators;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.Testing;
-using Microsoft;
 
 public class RelativeImportCodeFixTests
 {

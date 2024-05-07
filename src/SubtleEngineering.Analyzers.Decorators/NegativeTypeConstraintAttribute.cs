@@ -2,7 +2,7 @@
 {
     using System;
 
-    [AttributeUsage(AttributeTargets.Class | AttributeTargets.Struct | AttributeTargets.Interface | AttributeTargets.Method | AttributeTargets.Delegate, AllowMultiple = true, Inherited = true)]
+    [AttributeUsage(AttributeTargets.GenericParameter)]
     public class NegativeTypeConstraintAttribute : Attribute
     {
         public NegativeTypeConstraintAttribute(Type disallowedType, bool disallowDerived = false)

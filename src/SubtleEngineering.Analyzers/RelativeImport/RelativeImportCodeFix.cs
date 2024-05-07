@@ -1,7 +1,6 @@
 ﻿namespace SubtleEngineering.Analyzers.RelativeImport
 {
     using System.Collections.Immutable;
-    using System.Runtime.Serialization;
     using Microsoft.CodeAnalysis.CSharp.Syntax;
     using Microsoft.CodeAnalysis.CSharp;
     using Microsoft.CodeAnalysis;
@@ -11,7 +10,6 @@
     using System.Composition;
     using Microsoft.CodeAnalysis.CodeActions;
     using Microsoft.CodeAnalysis.Simplification;
-    using System.Xml.Linq;
 
     [ExportCodeFixProvider(LanguageNames.CSharp, Name = nameof(RelativeImportCodeFix)), Shared]
     public class RelativeImportCodeFix : CodeFixProvider
