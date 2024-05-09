@@ -8,6 +8,6 @@
 
         public const string DoNotUseRelativeImportUsingStatements = "SE1010";
 
-        public const string NegativeConstraintUsed = "SE1020";
+        public const string RestrictedConstraintUsed = "SE1020";
     }
 }

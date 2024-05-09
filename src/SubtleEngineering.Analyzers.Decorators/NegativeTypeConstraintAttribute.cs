@@ -3,9 +3,9 @@
     using System;
 
     [AttributeUsage(AttributeTargets.GenericParameter)]
-    public class NegativeTypeConstraintAttribute : Attribute
+    public class RestrictedTypeConstraintAttribute : Attribute
     {
-        public NegativeTypeConstraintAttribute(Type disallowedType, bool disallowDerived = false)
+        public RestrictedTypeConstraintAttribute(Type disallowedType, bool disallowDerived = false)
         {
             DisallowedType = disallowedType;
             DisallowDerived = disallowDerived;

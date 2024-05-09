@@ -1,7 +1,7 @@
-﻿using SubtleEngineering.Analyzers.NegativeConstraint;
+﻿using SubtleEngineering.Analyzers.RestrictedConstraint;
 using SubtleEngineering.Analyzers.RequireUsing;
 
-namespace SubtleEngineering.Analyzers.Tests.NegativeConstraint;
+namespace SubtleEngineering.Analyzers.Tests.RestrictedConstraint;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -10,12 +10,12 @@ using System.Threading.Tasks;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.Testing;
 using SubtleEngineering.Analyzers.Decorators;
-using VerifyCS = CSharpAnalyzerVerifier<NegativeConstraintAnalyzer>;
+using VerifyCS = CSharpAnalyzerVerifier<RestrictedConstraintAnalyzer>;
 
-public class NegativeConstraintAnalyzerTests
+public class RestrictedConstraintAnalyzerTests
 {
     [Fact]
-    public async Task TestNegativeClassInstantiationConstraint()
+    public async Task TestRestrictedClassInstantiationConstraint()
     {
         const string code = """
             using SubtleEngineering.Analyzers.Decorators;
@@ -27,7 +27,7 @@ public class NegativeConstraintAnalyzerTests
                     var x = new TClass<int>();
                 }
 
-                public class TClass<[NegativeTypeConstraint(typeof(int))] T>
+                public class TClass<[RestrictedTypeConstraint(typeof(int))] T>
                 {
                 }
             }
@@ -35,11 +35,11 @@ public class NegativeConstraintAnalyzerTests
 
         List<DiagnosticResult> expected = [
             VerifyCS.Diagnostic(
-                NegativeConstraintAnalyzer.Rules.Find(DiagnosticIds.NegativeConstraintUsed))
+                RestrictedConstraintAnalyzer.Rules.Find(DiagnosticIds.RestrictedConstraintUsed))
                     .WithLocation(7, 9)
                     .WithArguments("T", "TClass"),
             VerifyCS.Diagnostic(
-                NegativeConstraintAnalyzer.Rules.Find(DiagnosticIds.NegativeConstraintUsed))
+                RestrictedConstraintAnalyzer.Rules.Find(DiagnosticIds.RestrictedConstraintUsed))
                     .WithLocation(7, 17)
                     .WithArguments("T", "TClass"),
             ];
@@ -55,7 +55,7 @@ public class NegativeConstraintAnalyzerTests
 
             public class MyClass
             {
-                public static string Get<[NegativeTypeConstraint(typeof(int))] T>(T t) => t.ToString();
+                public static string Get<[RestrictedTypeConstraint(typeof(int))] T>(T t) => t.ToString();
 
                 public static void DoIt()
                 {
@@ -66,7 +66,7 @@ public class NegativeConstraintAnalyzerTests
 
         List<DiagnosticResult> expected = [
             VerifyCS.Diagnostic(
-                NegativeConstraintAnalyzer.Rules.Find(DiagnosticIds.NegativeConstraintUsed))
+                RestrictedConstraintAnalyzer.Rules.Find(DiagnosticIds.RestrictedConstraintUsed))
                     .WithLocation(9, 9)
                     .WithArguments("T", "Get"),
             ];
@@ -82,7 +82,7 @@ public class NegativeConstraintAnalyzerTests
 
             public class MyClass
             {
-                public static string Get<[NegativeTypeConstraint(typeof(int))] T>(T t) => t.ToString();
+                public static string Get<[RestrictedTypeConstraint(typeof(int))] T>(T t) => t.ToString();
 
                 public static void DoIt()
                 {
@@ -93,7 +93,7 @@ public class NegativeConstraintAnalyzerTests
 
         List<DiagnosticResult> expected = [
             VerifyCS.Diagnostic(
-                NegativeConstraintAnalyzer.Rules.Find(DiagnosticIds.NegativeConstraintUsed))
+                RestrictedConstraintAnalyzer.Rules.Find(DiagnosticIds.RestrictedConstraintUsed))
                     .WithLocation(9, 9)
                     .WithArguments("T", "Get"),
             ];
@@ -120,13 +120,13 @@ public class NegativeConstraintAnalyzerTests
 
                 public static void TakeDelegate(MyDelegate<int> d) {}
             
-                public delegate void MyDelegate<[NegativeTypeConstraint(typeof(int))] T>(T t);
+                public delegate void MyDelegate<[RestrictedTypeConstraint(typeof(int))] T>(T t);
             }
             """;
 
         List<DiagnosticResult> expected = [
             VerifyCS.Diagnostic(
-                NegativeConstraintAnalyzer.Rules.Find(DiagnosticIds.NegativeConstraintUsed))
+                RestrictedConstraintAnalyzer.Rules.Find(DiagnosticIds.RestrictedConstraintUsed))
                     .WithLocation(7, 22)
                     .WithArguments("T", "MyDelegate"),
             ];
@@ -148,7 +148,7 @@ public class NegativeConstraintAnalyzerTests
                     var a = (IBase<int>)d;
                 }
 
-                public interface IBase<[NegativeTypeConstraint(typeof(int))] out T>;
+                public interface IBase<[RestrictedTypeConstraint(typeof(int))] out T>;
                 
                 public interface IDerived<out T> : IBase<T>;
             }
@@ -156,11 +156,11 @@ public class NegativeConstraintAnalyzerTests
 
         List<DiagnosticResult> expected = [
             VerifyCS.Diagnostic(
-                NegativeConstraintAnalyzer.Rules.Find(DiagnosticIds.NegativeConstraintUsed))
+                RestrictedConstraintAnalyzer.Rules.Find(DiagnosticIds.RestrictedConstraintUsed))
                     .WithLocation(8, 17)
                     .WithArguments("T", "IBase"),
             VerifyCS.Diagnostic(
-                NegativeConstraintAnalyzer.Rules.Find(DiagnosticIds.NegativeConstraintUsed))
+                RestrictedConstraintAnalyzer.Rules.Find(DiagnosticIds.RestrictedConstraintUsed))
                     .WithLocation(8, 9)
                     .WithArguments("T", "IBase"),
             ];
@@ -180,13 +180,13 @@ public class NegativeConstraintAnalyzerTests
                 {
                     IBase<int> b;
                 }
-                public interface IBase<[NegativeTypeConstraint(typeof(int))] out T>;
+                public interface IBase<[RestrictedTypeConstraint(typeof(int))] out T>;
             }
             """;
 
         List<DiagnosticResult> expected = [
             VerifyCS.Diagnostic(
-                NegativeConstraintAnalyzer.Rules.Find(DiagnosticIds.NegativeConstraintUsed))
+                RestrictedConstraintAnalyzer.Rules.Find(DiagnosticIds.RestrictedConstraintUsed))
                     .WithLocation(7, 9)
                     .WithArguments("T", "IBase"),
             ];
@@ -195,7 +195,7 @@ public class NegativeConstraintAnalyzerTests
     }
 
     [Fact]
-    public async Task TestFieldThatUsesNegativeConstraints()
+    public async Task TestFieldThatUsesRestrictedConstraints()
     {
         const string code = """
             using SubtleEngineering.Analyzers.Decorators;
@@ -205,7 +205,7 @@ public class NegativeConstraintAnalyzerTests
                 public TClass<int> _field;
             }
 
-            public class TClass<[NegativeTypeConstraint(typeof(int))] T>
+            public class TClass<[RestrictedTypeConstraint(typeof(int))] T>
             {
             }
             """;
@@ -213,7 +213,7 @@ public class NegativeConstraintAnalyzerTests
         List<DiagnosticResult> expected = [
 
             VerifyCS.Diagnostic(
-                NegativeConstraintAnalyzer.Rules.Find(DiagnosticIds.NegativeConstraintUsed))
+                RestrictedConstraintAnalyzer.Rules.Find(DiagnosticIds.RestrictedConstraintUsed))
                     .WithLocation(5, 24)
                     .WithArguments("T", "_field"),
             ];
@@ -222,7 +222,7 @@ public class NegativeConstraintAnalyzerTests
     }
 
     [Fact]
-    public async Task TestPropertyWithNegativeConstraint()
+    public async Task TestPropertyWithRestrictedConstraint()
     {
         const string code = """
             using SubtleEngineering.Analyzers.Decorators;
@@ -231,7 +231,7 @@ public class NegativeConstraintAnalyzerTests
             {
                 public TClass<int> Property { get; set; }
 
-                public class TClass<[NegativeTypeConstraint(typeof(int))] T>
+                public class TClass<[RestrictedTypeConstraint(typeof(int))] T>
                 {
                 }
             }
@@ -239,7 +239,7 @@ public class NegativeConstraintAnalyzerTests
 
         List<DiagnosticResult> expected = [
             VerifyCS.Diagnostic(
-                NegativeConstraintAnalyzer.Rules.Find(DiagnosticIds.NegativeConstraintUsed))
+                RestrictedConstraintAnalyzer.Rules.Find(DiagnosticIds.RestrictedConstraintUsed))
                     .WithLocation(5, 24)
                     .WithArguments("T", "Property"),
             ];
@@ -272,7 +272,7 @@ public class NegativeConstraintAnalyzerTests
             public class MyClass
             {
                 
-                public static string Get<[NegativeTypeConstraint(typeof({{disallowType}}), {{(inherit ? "true" : "false")}})] T>(T t) => t.ToString();
+                public static string Get<[RestrictedTypeConstraint(typeof({{disallowType}}), {{(inherit ? "true" : "false")}})] T>(T t) => t.ToString();
 
                 public static void DoIt()
                 {
@@ -283,7 +283,7 @@ public class NegativeConstraintAnalyzerTests
 
         List<DiagnosticResult> expected = [
             VerifyCS.Diagnostic(
-                NegativeConstraintAnalyzer.Rules.Find(DiagnosticIds.NegativeConstraintUsed))
+                RestrictedConstraintAnalyzer.Rules.Find(DiagnosticIds.RestrictedConstraintUsed))
                     .WithLocation(18, 9)
                     .WithArguments("T", "Get"),
             ];

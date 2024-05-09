@@ -1,4 +1,4 @@
-﻿namespace SubtleEngineering.Analyzers.NegativeConstraint
+﻿namespace SubtleEngineering.Analyzers.RestrictedConstraint
 {
     using Microsoft.CodeAnalysis.Diagnostics;
     using Microsoft.CodeAnalysis;
@@ -11,14 +11,14 @@
     using Microsoft.CodeAnalysis.Operations;
 
     [DiagnosticAnalyzer(LanguageNames.CSharp)]
-    public class NegativeConstraintAnalyzer : DiagnosticAnalyzer
+    public class RestrictedConstraintAnalyzer : DiagnosticAnalyzer
     {
         private const int SE1020 = 0;
 
         public static readonly ImmutableArray<DiagnosticDescriptor> Rules = ImmutableArray.Create(
             new DiagnosticDescriptor(
-                DiagnosticIds.NegativeConstraintUsed,
-                "Negative constraint for Generic",
+                DiagnosticIds.RestrictedConstraintUsed,
+                "Restricted constraint for Generic",
                 "The generic parameter {0} on element {1} is of a disallowed type.",
                 "Usage",
                 DiagnosticSeverity.Warning,
@@ -148,7 +148,7 @@
                 return;
             }
 
-            // Iterate through each type parameter to check for the NegativeTypeConstraintAttribute
+            // Iterate through each type parameter to check for the RestrictedTypeConstraintAttribute
             for (int i = 0; i < nameSymbol.TypeParameters.Length; i++)
             {
                 var typeParameter = nameSymbol.TypeParameters[i];
@@ -159,7 +159,7 @@
 
         private static void VerifyGenericParameter(ITypeParameterSymbol typeParameter, ITypeSymbol providedType, Action<Diagnostic> reportDiagnostic, Location location, string symbolName)
         {
-            var attributeData = GetNegativeTypeConstraintAttribute(typeParameter);
+            var attributeData = GetRestrictedTypeConstraintAttribute(typeParameter);
             if (attributeData == null)
             {
                 return;
@@ -186,11 +186,11 @@
             }
         }
 
-        private static AttributeData GetNegativeTypeConstraintAttribute(ITypeParameterSymbol typeParameter)
+        private static AttributeData GetRestrictedTypeConstraintAttribute(ITypeParameterSymbol typeParameter)
         {
             foreach (var attribute in typeParameter.GetAttributes())
             {
-                if (attribute.AttributeClass.IsAssignableTo<NegativeTypeConstraintAttribute>())
+                if (attribute.AttributeClass.IsAssignableTo<RestrictedTypeConstraintAttribute>())
                 {
                     return attribute;
                 }
