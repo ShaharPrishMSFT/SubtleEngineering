@@ -11,6 +11,7 @@
     using Microsoft.CodeAnalysis.Operations;
     using System.Collections.Generic;
     using MoreLinq;
+    using System.Net.NetworkInformation;
 
     [DiagnosticAnalyzer(LanguageNames.CSharp)]
     public class RestrictedConstraintAnalyzer : DiagnosticAnalyzer
@@ -196,7 +197,7 @@
 
         private static bool TypeIsAllowed(ITypeSymbol providedType, INamedTypeSymbol restrictedType, bool restrictDerived)
         {
-            if (SymbolEqualityComparer.Default.Equals(providedType, restrictedType))
+            if (providedType.IsOfTypeOrGeneric(restrictedType))
             {
                 return false;
             }
@@ -213,12 +214,12 @@
         {
             while (type != null)
             {
-                if (SymbolEqualityComparer.Default.Equals(type.BaseType, baseType))
+                if (type.IsOfTypeOrGeneric(baseType))
                 {
                     return true;
                 }
 
-                if (type.AllInterfaces.Any(x => SymbolEqualityComparer.Default.Equals(x, baseType)))
+                if (type.AllInterfaces.Any(x => x.IsOfTypeOrGeneric(baseType)))
                 {
                     return true;
                 }

@@ -114,5 +114,20 @@
 
             return "[Unknown]";
         }
+
+        public static bool IsOfTypeOrGeneric(this ITypeSymbol symbol, INamedTypeSymbol ofType)
+        {
+            if (SymbolEqualityComparer.Default.Equals(symbol, ofType))
+            {
+                return true;
+            }
+
+            if (ofType.IsUnboundGenericType && symbol is INamedTypeSymbol namedTypeSymbol)
+            {
+                return SymbolEqualityComparer.Default.Equals(namedTypeSymbol.ConstructUnboundGenericType(), ofType);
+            }
+
+            return false;
+        }
     }
 }

@@ -323,6 +323,42 @@ public class RestrictedConstraintAnalyzerTests
         await sut.RunAsync();
     }
 
+    [Theory]
+    [InlineData("Interface1<int>", "Interface1<int>", false, true)]
+    [InlineData("Interface1<>", "Interface1<int>", false, true)]
+    [InlineData("Interface1<>", "Class1<int>", false, false)]
+    [InlineData("Interface1<>", "Class1<int>", true, true)]
+    public async Task TestGenericTypeRestrictions(string disallowType, string askedType, bool inherit, bool error)
+    {
+        var code = $$"""
+            using SubtleEngineering.Analyzers.Decorators;
+
+            public interface Interface1<T>;
+
+            public class Class1<T> : Interface1<T>;
+
+            public class MyClass
+            {
+                public static string Get<[RestrictedType(typeof({{disallowType}}), {{(inherit ? "true" : "false")}})] T>(T t) => t.ToString();
+
+                public static void DoIt()
+                {
+                    Get<{{askedType}}>(null);
+                }
+            }
+            """;
+
+        List<DiagnosticResult> expected = [
+            VerifyCS.Diagnostic(
+                RestrictedConstraintAnalyzer.Rules.Find(DiagnosticIds.RestrictedConstraintUsed))
+                    .WithLocation(13, 9)
+                    .WithArguments("T", "Get"),
+            ];
+        var sut = CreateSut(code, error ? expected : []);
+        await sut.RunAsync();
+    }
+
+
     private VerifyCS.Test CreateSut(string code, List<DiagnosticResult> expected)
     {
         var test = new VerifyCS.Test()
