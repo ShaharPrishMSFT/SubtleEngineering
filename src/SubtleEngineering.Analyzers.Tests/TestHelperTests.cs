@@ -72,6 +72,30 @@ public class TestHelperTests
         result.Should().BeFalse();
     }
 
+    [Fact]
+    public void ClrTypeNameWorks()
+    {
+        var sourceCode = @"
+            namespace TestNamespace
+            {
+                public class MyClass
+                {
+                    public MyClass(string s, int i, MyClass c)
+                    {
+                    }
+                }
+            }";
+
+        var compilation = CreateCompilation(sourceCode);
+        var x = (INamedTypeSymbol)GetTypeSymbol(compilation, "TestNamespace.MyClass");
+        var ctor = (IMethodSymbol)x.Constructors[0];
+        var parameters = ctor.Parameters;
+
+        parameters[0].Type.ToDisplayString(Helpers.FullyQualifiedClrTypeName).Should().Be("System.String");
+        parameters[1].Type.ToDisplayString(Helpers.FullyQualifiedClrTypeName).Should().Be("System.Int32");
+        parameters[2].Type.ToDisplayString(Helpers.FullyQualifiedClrTypeName).Should().Be("TestNamespace.MyClass");
+    }
+
     private static Compilation CreateCompilation(string sourceCode)
     {
         var c = CSharpCompilation.Create("TestAssembly",

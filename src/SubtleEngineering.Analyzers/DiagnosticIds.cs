@@ -9,5 +9,7 @@
         public const string DoNotUseRelativeImportUsingStatements = "SE1010";
 
         public const string RestrictedConstraintUsed = "SE1020";
+        public const string RestrictedConstraintMisusedOnAssembly = "SE1021";
+        public const string RestrictedConstraintMisusedOnGenericParameter = "SE1022";
     }
 }

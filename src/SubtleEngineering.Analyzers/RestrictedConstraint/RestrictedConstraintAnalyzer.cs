@@ -9,11 +9,15 @@
     using System.Linq;
     using System;
     using Microsoft.CodeAnalysis.Operations;
+    using System.Collections.Generic;
+    using MoreLinq;
 
     [DiagnosticAnalyzer(LanguageNames.CSharp)]
     public class RestrictedConstraintAnalyzer : DiagnosticAnalyzer
     {
         private const int SE1020 = 0;
+        private const int SE1021 = 1;
+        private const int SE1022 = 2;
 
         public static readonly ImmutableArray<DiagnosticDescriptor> Rules = ImmutableArray.Create(
             new DiagnosticDescriptor(
@@ -105,7 +109,7 @@
                 return;
             }
 
-            if (typeSymbol is INamedTypeSymbol namedType &&  namedType.IsGenericType)
+            if (typeSymbol is INamedTypeSymbol namedType && namedType.IsGenericType)
             {
                 AnalyzeTypeArguments(context.ReportDiagnostic, context.Symbol.Locations[0], elementName, namedType.TypeParameters, namedType.TypeArguments);
             }
@@ -159,59 +163,50 @@
 
         private static void VerifyGenericParameter(ITypeParameterSymbol typeParameter, ITypeSymbol providedType, Action<Diagnostic> reportDiagnostic, Location location, string symbolName)
         {
-            var attributeData = GetRestrictedTypeConstraintAttribute(typeParameter);
-            if (attributeData == null)
+            foreach (var attributeData in GetRestrictedTypeConstraintAttributes(typeParameter))
             {
-                return;
-            }
+                var ctorArgs = attributeData.ConstructorArguments;
 
-            var ctorArgs = attributeData.ConstructorArguments;
-            if (ctorArgs.Length != 2)
-            {
-                return;
-            }
+                var restrictedType = ctorArgs[0].Value as INamedTypeSymbol;
+                var restrictDerived = (bool)ctorArgs[1].Value;
 
-            var disallowedType = ctorArgs[0].Value as INamedTypeSymbol;
-            var disallowDerived = (bool)ctorArgs[1].Value;
+                if (!TypeIsAllowed(providedType, restrictedType, restrictDerived))
+                {
+                    var diagnostic = Diagnostic.Create(
+                        Rules[SE1020],
+                        location,
+                        typeParameter.ToDisplayString(),
+                        symbolName);
 
-            if (TypeIsDisallowed(providedType, disallowedType, disallowDerived))
-            {
-                var diagnostic = Diagnostic.Create(
-                    Rules[SE1020],
-                    location,
-                    typeParameter.ToDisplayString(),
-                    symbolName);
-
-                reportDiagnostic(diagnostic);
+                    reportDiagnostic(diagnostic);
+                }
             }
         }
 
-        private static AttributeData GetRestrictedTypeConstraintAttribute(ITypeParameterSymbol typeParameter)
+        private static IEnumerable<AttributeData> GetRestrictedTypeConstraintAttributes(ITypeParameterSymbol typeParameter)
         {
             foreach (var attribute in typeParameter.GetAttributes())
             {
-                if (attribute.AttributeClass.IsAssignableTo<RestrictedTypeConstraintAttribute>())
+                if (attribute.AttributeClass.IsAssignableTo<RestrictedTypeAttribute>())
                 {
-                    return attribute;
+                    yield return attribute;
                 }
             }
-
-            return null;
         }
 
-        private static bool TypeIsDisallowed(ITypeSymbol providedType, INamedTypeSymbol disallowedType, bool disallowDerived)
+        private static bool TypeIsAllowed(ITypeSymbol providedType, INamedTypeSymbol restrictedType, bool restrictDerived)
         {
-            if (SymbolEqualityComparer.Default.Equals(providedType, disallowedType))
+            if (SymbolEqualityComparer.Default.Equals(providedType, restrictedType))
             {
-                return true;
+                return false;
             }
 
-            if (disallowDerived && InheritsFrom(providedType, disallowedType))
+            if (restrictDerived && InheritsFrom(providedType, restrictedType))
             {
-                return true;
+                return false;
             }
 
-            return false;
+            return true;
         }
 
         private static bool InheritsFrom(ITypeSymbol type, INamedTypeSymbol baseType)

@@ -1,6 +1,7 @@
 ﻿namespace SubtleEngineering.Analyzers
 {
     using System;
+    using System.Collections.Generic;
     using System.Collections.Immutable;
     using System.Linq;
     using Microsoft.CodeAnalysis;
@@ -13,8 +14,12 @@
             typeQualificationStyle: SymbolDisplayTypeQualificationStyle.NameAndContainingTypesAndNamespaces,
             globalNamespaceStyle: SymbolDisplayGlobalNamespaceStyle.Omitted);
 
+        public static readonly SymbolDisplayFormat FullyQualifiedClrTypeName = new SymbolDisplayFormat(
+            typeQualificationStyle: SymbolDisplayTypeQualificationStyle.NameAndContainingTypesAndNamespaces,
+            genericsOptions: SymbolDisplayGenericsOptions.IncludeTypeParameters,
+            miscellaneousOptions: SymbolDisplayMiscellaneousOptions.ExpandNullable);
         public static bool IsOfType(this ITypeSymbol symbol, string fullName)
-            => symbol.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat).EndsWith(fullName);
+            => symbol.ToDisplayString(FullyQualifiedClrTypeName).EndsWith(fullName);
 
         public static bool IsOfType(this ITypeSymbol symbol, Type type)
             => symbol.IsOfType(type.FullName);
@@ -86,6 +91,28 @@
             }
 
             return null;
+        }
+
+        public static IEnumerable<AttributeData> GetAttributesOfType<T>(this ImmutableArray<AttributeData> attributes)
+            => attributes.Where(a => a.AttributeClass.IsOfType<T>());
+
+        public static string GetContainingNodeName(this INamedTypeSymbol symbol)
+        {
+            var containingSymbol = symbol.ContainingSymbol;
+
+            // If the containing symbol is a method, get its name
+            if (containingSymbol is IMethodSymbol methodSymbol)
+            {
+                return methodSymbol.Name;
+            }
+
+            // If the containing symbol is a named type, get its name
+            if (containingSymbol is INamedTypeSymbol containingTypeSymbol)
+            {
+                return containingTypeSymbol.Name;
+            }
+
+            return "[Unknown]";
         }
     }
 }

@@ -1,16 +1,16 @@
-﻿using SubtleEngineering.Analyzers.RestrictedConstraint;
-using SubtleEngineering.Analyzers.RequireUsing;
-
+﻿
 namespace SubtleEngineering.Analyzers.Tests.RestrictedConstraint;
 using System;
 using System.Collections.Generic;
+using SubtleEngineering.Analyzers.RequireUsing;
+using SubtleEngineering.Analyzers.RestrictedConstraint;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.Testing;
 using SubtleEngineering.Analyzers.Decorators;
-using VerifyCS = CSharpAnalyzerVerifier<RestrictedConstraintAnalyzer>;
+using VerifyCS = CSharpAnalyzerVerifier<Analyzers.RestrictedConstraint.RestrictedConstraintAnalyzer>;
 
 public class RestrictedConstraintAnalyzerTests
 {
@@ -27,7 +27,7 @@ public class RestrictedConstraintAnalyzerTests
                     var x = new TClass<int>();
                 }
 
-                public class TClass<[RestrictedTypeConstraint(typeof(int))] T>
+                public class TClass<[RestrictedType(typeof(int))] T>
                 {
                 }
             }
@@ -55,7 +55,7 @@ public class RestrictedConstraintAnalyzerTests
 
             public class MyClass
             {
-                public static string Get<[RestrictedTypeConstraint(typeof(int))] T>(T t) => t.ToString();
+                public static string Get<[RestrictedType(typeof(int))] T>(T t) => t.ToString();
 
                 public static void DoIt()
                 {
@@ -82,7 +82,7 @@ public class RestrictedConstraintAnalyzerTests
 
             public class MyClass
             {
-                public static string Get<[RestrictedTypeConstraint(typeof(int))] T>(T t) => t.ToString();
+                public static string Get<[RestrictedType(typeof(int))] T>(T t) => t.ToString();
 
                 public static void DoIt()
                 {
@@ -120,7 +120,7 @@ public class RestrictedConstraintAnalyzerTests
 
                 public static void TakeDelegate(MyDelegate<int> d) {}
             
-                public delegate void MyDelegate<[RestrictedTypeConstraint(typeof(int))] T>(T t);
+                public delegate void MyDelegate<[RestrictedType(typeof(int))] T>(T t);
             }
             """;
 
@@ -148,7 +148,7 @@ public class RestrictedConstraintAnalyzerTests
                     var a = (IBase<int>)d;
                 }
 
-                public interface IBase<[RestrictedTypeConstraint(typeof(int))] out T>;
+                public interface IBase<[RestrictedType(typeof(int))] out T>;
                 
                 public interface IDerived<out T> : IBase<T>;
             }
@@ -180,7 +180,7 @@ public class RestrictedConstraintAnalyzerTests
                 {
                     IBase<int> b;
                 }
-                public interface IBase<[RestrictedTypeConstraint(typeof(int))] out T>;
+                public interface IBase<[RestrictedType(typeof(int))] out T>;
             }
             """;
 
@@ -205,7 +205,7 @@ public class RestrictedConstraintAnalyzerTests
                 public TClass<int> _field;
             }
 
-            public class TClass<[RestrictedTypeConstraint(typeof(int))] T>
+            public class TClass<[RestrictedType(typeof(int))] T>
             {
             }
             """;
@@ -231,7 +231,7 @@ public class RestrictedConstraintAnalyzerTests
             {
                 public TClass<int> Property { get; set; }
 
-                public class TClass<[RestrictedTypeConstraint(typeof(int))] T>
+                public class TClass<[RestrictedType(typeof(int))] T>
                 {
                 }
             }
@@ -242,6 +242,38 @@ public class RestrictedConstraintAnalyzerTests
                 RestrictedConstraintAnalyzer.Rules.Find(DiagnosticIds.RestrictedConstraintUsed))
                     .WithLocation(5, 24)
                     .WithArguments("T", "Property"),
+            ];
+        var sut = CreateSut(code, expected);
+        await sut.RunAsync();
+    }
+
+    [Fact]
+    public async Task TestMultipleConstraints()
+    {
+        const string code = """
+            using SubtleEngineering.Analyzers.Decorators;
+
+            public class MyClass
+            {
+                public TClass<int> Property1 { get; set; }
+
+                public TClass<int> Property2 { get; set; }
+            
+                public class TClass<[RestrictedType(typeof(int)), RestrictedType(typeof(string))] T>
+                {
+                }
+            }
+            """;
+
+        List<DiagnosticResult> expected = [
+            VerifyCS.Diagnostic(
+                RestrictedConstraintAnalyzer.Rules.Find(DiagnosticIds.RestrictedConstraintUsed))
+                    .WithLocation(5, 24)
+                    .WithArguments("T", "Property1"),
+            VerifyCS.Diagnostic(
+                RestrictedConstraintAnalyzer.Rules.Find(DiagnosticIds.RestrictedConstraintUsed))
+                    .WithLocation(7, 24)
+                    .WithArguments("T", "Property2"),
             ];
         var sut = CreateSut(code, expected);
         await sut.RunAsync();
@@ -272,7 +304,7 @@ public class RestrictedConstraintAnalyzerTests
             public class MyClass
             {
                 
-                public static string Get<[RestrictedTypeConstraint(typeof({{disallowType}}), {{(inherit ? "true" : "false")}})] T>(T t) => t.ToString();
+                public static string Get<[RestrictedType(typeof({{disallowType}}), {{(inherit ? "true" : "false")}})] T>(T t) => t.ToString();
 
                 public static void DoIt()
                 {
