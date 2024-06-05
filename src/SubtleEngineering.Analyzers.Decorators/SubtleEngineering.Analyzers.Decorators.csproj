@@ -15,7 +15,7 @@
 	</ItemGroup>
 
 	<ItemGroup>
-	  <PackageReference Include="Microsoft.Bcl.AsyncInterfaces" PrivateAssets="All"/>
+	  <PackageReference Include="Microsoft.Bcl.AsyncInterfaces"/>
 	</ItemGroup>
 
 </Project>
