@@ -22,7 +22,6 @@
         </PackageReference>
         <PackageReference Include="Microsoft.CodeAnalysis.CSharp" PrivateAssets="all" />
 		<PackageReference Include="Microsoft.CodeAnalysis.CSharp.Workspaces" PrivateAssets="all" />
-		<PackageReference Include="morelinq" />
 	</ItemGroup>
     <ItemGroup>
 		<ProjectReference Include="..\SubtleEngineering.Analyzers.Decorators\SubtleEngineering.Analyzers.Decorators.csproj">
