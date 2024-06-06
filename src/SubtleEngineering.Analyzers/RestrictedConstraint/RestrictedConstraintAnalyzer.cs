@@ -10,8 +10,6 @@
     using System;
     using Microsoft.CodeAnalysis.Operations;
     using System.Collections.Generic;
-    using MoreLinq;
-    using System.Net.NetworkInformation;
 
     [DiagnosticAnalyzer(LanguageNames.CSharp)]
     public class RestrictedConstraintAnalyzer : DiagnosticAnalyzer
