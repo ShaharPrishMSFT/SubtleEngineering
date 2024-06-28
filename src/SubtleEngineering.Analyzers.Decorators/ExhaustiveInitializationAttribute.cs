@@ -5,9 +5,9 @@
     using System.Text;
 
     [System.AttributeUsage(AttributeTargets.Class | AttributeTargets.Struct, Inherited = false, AllowMultiple = false)]
-    public sealed class MandatoryInitAttribute : Attribute
+    public sealed class ExhaustiveInitializationAttribute : Attribute
     {
-        public MandatoryInitAttribute()
+        public ExhaustiveInitializationAttribute()
         {
         }
     }

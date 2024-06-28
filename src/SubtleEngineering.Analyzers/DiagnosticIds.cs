@@ -21,7 +21,7 @@
             public const string MisusedOnGenericParameter = "SE1022";
         }
 
-        public class MandatoryInit
+        public class ExhaustiveInitialization
         {
             public const string PropertyIsMissingRequired = "SE1030";
             public const string OnlyOneConstructorAllowedWhenMissingRequired = "SE1031";
