@@ -1,5 +1,6 @@
 ﻿namespace SubtleEngineering.Analyzers.Tests
 {
+    using Microsoft.CodeAnalysis.CSharp;
     using Microsoft.CodeAnalysis.CSharp.Testing;
     using Microsoft.CodeAnalysis.Diagnostics;
     using Microsoft.CodeAnalysis.Testing.Verifiers;
@@ -14,9 +15,15 @@
                 SolutionTransforms.Add((solution, projectId) =>
                 {
                     var compilationOptions = solution.GetProject(projectId)!.CompilationOptions;
-                    compilationOptions = compilationOptions!.WithSpecificDiagnosticOptions(
-                        compilationOptions.SpecificDiagnosticOptions.SetItems(CSharpVerifierHelper.NullableWarnings));
-                    solution = solution.WithProjectCompilationOptions(projectId, compilationOptions);
+                    compilationOptions = compilationOptions!
+                        .WithSpecificDiagnosticOptions(
+                            compilationOptions
+                                .SpecificDiagnosticOptions
+                                .SetItems(CSharpVerifierHelper.NullableWarnings));
+
+                    solution = solution
+                        .WithProjectCompilationOptions(projectId, compilationOptions)
+                        .WithProjectParseOptions(projectId, new CSharpParseOptions(LanguageVersion.Preview));
 
                     return solution;
                 });

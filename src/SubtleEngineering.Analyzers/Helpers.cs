@@ -129,5 +129,18 @@
 
             return false;
         }
+
+        public static bool IsPropertyIdentifier(this IdentifierNameSyntax identifierName, IPropertySymbol propertySymbol)
+        {
+            var isMatchingName = identifierName.Identifier.Text == propertySymbol.Name;
+
+            var isMemberAccessWithThis = identifierName.Parent is MemberAccessExpressionSyntax memberAccess &&
+                                         memberAccess.Expression is ThisExpressionSyntax;
+
+            var isDirectPropertyAccess = identifierName.Parent is AssignmentExpressionSyntax assignExpr &&
+                                         assignExpr.Left == identifierName;
+
+            return isMatchingName && (isMemberAccessWithThis || isDirectPropertyAccess);
+        }
     }
 }

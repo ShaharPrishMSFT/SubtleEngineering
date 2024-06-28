@@ -39,7 +39,7 @@
                     equivalenceKey: "UseFullyQualifiedNamespace"),
                 diagnostic);
         }
-
+            
         private async Task<Document> FixUsingDirectiveAsync(CodeFixContext context, UsingDirectiveSyntax usingDirective, Diagnostic diagnostic, CancellationToken cancellationToken)
         {
             var document = context.Document;
