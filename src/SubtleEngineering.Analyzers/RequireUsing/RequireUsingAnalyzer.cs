@@ -18,21 +18,21 @@
 
         public static readonly ImmutableArray<DiagnosticDescriptor> Rules = ImmutableArray.Create(
             new DiagnosticDescriptor(
-                DiagnosticIds.TypeMustBeInstantiatedWithinAUsingStatement,
+                DiagnosticIds.RequireUsing.TypeMustBeInstantiatedWithinAUsingStatement,
                 "Type must be instantiated within a using statement",
                 "Type or method '{0}' must only be instantiated or called within a using statement or using declaration. Use the ExcludeFromUsing and ExcludeFromUsingAsync extension method on the IDisposable to mark that you will take care of disposing of it.",
                 "Usage",
                 DiagnosticSeverity.Warning,
                 isEnabledByDefault: true),
             new DiagnosticDescriptor(
-                DiagnosticIds.TypesDecoratedWithTheRequireUsingAttributeMustInheritFromIDisposable,
+                DiagnosticIds.RequireUsing.TypesDecoratedWithTheRequireUsingAttributeMustInheritFromIDisposable,
                 $"Types decorated with the {nameof(RequireUsingAttribute)} attribute must inherit from IDisposable or IDisposableAsync",
                 "Type '{0}' must support IDisposable or IDisposableAsync to apply the attribute to it",
                 "Usage",
                 DiagnosticSeverity.Warning,
                 isEnabledByDefault: true),
             new DiagnosticDescriptor(
-                DiagnosticIds.MethodsReturnsDecoratedWithTheRequireUsingAttributeMustInheritFromIDisposable,
+                DiagnosticIds.RequireUsing.MethodsReturnsDecoratedWithTheRequireUsingAttributeMustInheritFromIDisposable,
                 $"Methods decorated with the {nameof(RequireUsingAttribute)} attribute must have a return value tha inherits from IDisposable or IDisposableAsync",
                 "Method '{0}' must have a return type that supports IDisposable or IDisposableAsync to apply the attribute to it",
                 "Usage",

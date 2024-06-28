@@ -13,7 +13,7 @@
 
         public static readonly ImmutableArray<DiagnosticDescriptor> Rules = ImmutableArray.Create(
             new DiagnosticDescriptor(
-                DiagnosticIds.DoNotUseRelativeImportUsingStatements,
+                DiagnosticIds.RelativeImport.DoNotUseRelativeImportUsingStatements,
                 "Do not use relative namespaces in using directives - this can cause hidden bugs when copying code or during refactors.",
                 "Namespace '{0}' is a relative and represents {1} - use the fully qualified name instead.",
                 "Usage",

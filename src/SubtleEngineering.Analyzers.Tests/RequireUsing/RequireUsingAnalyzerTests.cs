@@ -24,11 +24,11 @@ public class RequireUsingAnalyzerTests
 
         List<DiagnosticResult> expected = [
             VerifyCS.Diagnostic(
-                RequireUsingAnalyzer.Rules.Find(DiagnosticIds.TypesDecoratedWithTheRequireUsingAttributeMustInheritFromIDisposable))
+                RequireUsingAnalyzer.Rules.Find(DiagnosticIds.RequireUsing.TypesDecoratedWithTheRequireUsingAttributeMustInheritFromIDisposable))
                     .WithLocation(3, 14)
                     .WithArguments("MyClass"),
             VerifyCS.Diagnostic(
-                RequireUsingAnalyzer.Rules.Find(DiagnosticIds.MethodsReturnsDecoratedWithTheRequireUsingAttributeMustInheritFromIDisposable))
+                RequireUsingAnalyzer.Rules.Find(DiagnosticIds.RequireUsing.MethodsReturnsDecoratedWithTheRequireUsingAttributeMustInheritFromIDisposable))
                     .WithLocation(6, 19)
                    .WithArguments("Create"),
             ];
@@ -98,7 +98,7 @@ public class RequireUsingAnalyzerTests
             """;
 
         var expected = VerifyCS.Diagnostic(
-            RequireUsingAnalyzer.Rules.Find(DiagnosticIds.TypeMustBeInstantiatedWithinAUsingStatement))
+            RequireUsingAnalyzer.Rules.Find(DiagnosticIds.RequireUsing.TypeMustBeInstantiatedWithinAUsingStatement))
                 .WithLocation(16, 23)
                 .WithArguments("MyClass");
         var sut = CreateSut(code, [expected]);
@@ -129,7 +129,7 @@ public class RequireUsingAnalyzerTests
             """;
 
         var expected = VerifyCS.Diagnostic(
-            RequireUsingAnalyzer.Rules.Find(DiagnosticIds.TypeMustBeInstantiatedWithinAUsingStatement))
+            RequireUsingAnalyzer.Rules.Find(DiagnosticIds.RequireUsing.TypeMustBeInstantiatedWithinAUsingStatement))
                 .WithLocation(15, 23)
                 .WithArguments("MyClass");
         var sut = CreateSut(code, [expected]);
@@ -163,7 +163,7 @@ public class RequireUsingAnalyzerTests
             """;
 
         var expected = VerifyCS.Diagnostic(
-            RequireUsingAnalyzer.Rules.Find(DiagnosticIds.TypeMustBeInstantiatedWithinAUsingStatement))
+            RequireUsingAnalyzer.Rules.Find(DiagnosticIds.RequireUsing.TypeMustBeInstantiatedWithinAUsingStatement))
                 .WithLocation(15, 23)
                 .WithArguments("Create");
         var sut = CreateSut(code, [expected]);
@@ -317,7 +317,7 @@ public class RequireUsingAnalyzerTests
 
         List<DiagnosticResult> expected = [
             VerifyCS.Diagnostic(
-            RequireUsingAnalyzer.Rules.Find(DiagnosticIds.TypeMustBeInstantiatedWithinAUsingStatement))
+            RequireUsingAnalyzer.Rules.Find(DiagnosticIds.RequireUsing.TypeMustBeInstantiatedWithinAUsingStatement))
                 .WithLocation(22, 9)
                 .WithArguments("Method"),
                  ];
