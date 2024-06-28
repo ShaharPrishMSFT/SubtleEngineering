@@ -3,12 +3,9 @@
     using System;
     using System.Collections.Generic;
     using System.Collections.Immutable;
-    using System.Text;
     using Microsoft.CodeAnalysis.CSharp.Syntax;
-    using Microsoft.CodeAnalysis.CSharp;
     using Microsoft.CodeAnalysis.Diagnostics;
     using Microsoft.CodeAnalysis;
-    using System.Data;
     using SubtleEngineering.Analyzers.Decorators;
     using System.Linq;
 
@@ -17,18 +14,26 @@
     {
         private const int SE1030 = 0;
         private const int SE1031 = 1;
+        private const int SE1032 = 2;
 
         public static readonly ImmutableArray<DiagnosticDescriptor> Rules = ImmutableArray.Create(
             new DiagnosticDescriptor(
-                DiagnosticIds.ExhaustiveInitialization.PropertyIsMissingRequired,
-                "All properties on this type must be required",
-                "Type '{0}' has a property {1} that's not marked as required.",
+                DiagnosticIds.ExhaustiveInitialization.TypeInitializationIsNonExhaustive,
+                "Type initialization is non-exhaustive.",
+                "Type '{0}' initialization is non-exhaustive.",
                 "Usage",
                 DiagnosticSeverity.Warning,
                 isEnabledByDefault: true),
             new DiagnosticDescriptor(
-                DiagnosticIds.ExhaustiveInitialization.OnlyOneConstructorAllowedWhenMissingRequired,
-                "When some properties are not marked as required, they must be initialized from a single constructor. Having more than one constructor will allow for defaults, which is not allowed.",
+                DiagnosticIds.ExhaustiveInitialization.PropertyIsMissingRequired,
+                "All properties on this type must be set to 'required'",
+                "Type '{0}' has a property {1} that's not marked as 'required'.",
+                "Usage",
+                DiagnosticSeverity.Warning,
+                isEnabledByDefault: true),
+            new DiagnosticDescriptor(
+                DiagnosticIds.ExhaustiveInitialization.OnlyOneConstructorAllowed,
+                "Marking an object as ExhaustiveInitialization means a type can only have one explicitly declared constructor. This type has more.",
                 "Type '{0}' has more than one constructor.",
                 "Usage",
                 DiagnosticSeverity.Warning,
@@ -107,6 +112,7 @@
                     potentiallyBad.RemoveAll(x => HasMatchingParameterName(constructor, x));
                 }
 
+                bool emittedTypeError = false;
                 foreach (var property in potentiallyBad)
                 {
                     if (property.DeclaringSyntaxReferences.Length > 0)
@@ -116,9 +122,15 @@
 
                         if (!property.IsRequired)
                         {
-                            var diagnostic = Diagnostic.Create(Rules[SE1030], property.Locations[0], namedTypeSymbol.ToDisplayString(), property.Name);
+                            if (!emittedTypeError)
+                            {
+                                emittedTypeError = true;
+                                var typeDiagnostic = Diagnostic.Create(Rules[SE1030], namedTypeSymbol.Locations[0], namedTypeSymbol.ToDisplayString());
+                                context.ReportDiagnostic(typeDiagnostic);
+                            }
+
+                            var diagnostic = Diagnostic.Create(Rules[SE1031], property.Locations[0], namedTypeSymbol.ToDisplayString(), property.Name);
                             context.ReportDiagnostic(diagnostic);
-                            return;
                         }
                     }
                 }

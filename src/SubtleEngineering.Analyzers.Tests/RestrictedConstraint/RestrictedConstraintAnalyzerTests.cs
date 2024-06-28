@@ -1,11 +1,7 @@
 ﻿
 namespace SubtleEngineering.Analyzers.Tests.RestrictedConstraint;
-using System;
 using System.Collections.Generic;
-using SubtleEngineering.Analyzers.RequireUsing;
 using SubtleEngineering.Analyzers.RestrictedConstraint;
-using System.Linq;
-using System.Text;
 using System.Threading.Tasks;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.Testing;

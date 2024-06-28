@@ -23,8 +23,9 @@
 
         public class ExhaustiveInitialization
         {
-            public const string PropertyIsMissingRequired = "SE1030";
-            public const string OnlyOneConstructorAllowedWhenMissingRequired = "SE1031";
+            public const string TypeInitializationIsNonExhaustive = "SE1030";
+            public const string PropertyIsMissingRequired = "SE1031";
+            public const string OnlyOneConstructorAllowed = "SE1032";
         }
     }
 }
