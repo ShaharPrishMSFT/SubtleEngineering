@@ -1,11 +1,7 @@
 ﻿
 namespace SubtleEngineering.Analyzers.Tests.RestrictedConstraint;
-using System;
 using System.Collections.Generic;
-using SubtleEngineering.Analyzers.RequireUsing;
 using SubtleEngineering.Analyzers.RestrictedConstraint;
-using System.Linq;
-using System.Text;
 using System.Threading.Tasks;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.Testing;
@@ -35,11 +31,11 @@ public class RestrictedConstraintAnalyzerTests
 
         List<DiagnosticResult> expected = [
             VerifyCS.Diagnostic(
-                RestrictedConstraintAnalyzer.Rules.Find(DiagnosticIds.RestrictedConstraintUsed))
+                RestrictedConstraintAnalyzer.Rules.Find(DiagnosticsDetails.RestrictedConstraint.UsedId))
                     .WithLocation(7, 9)
                     .WithArguments("T", "TClass"),
             VerifyCS.Diagnostic(
-                RestrictedConstraintAnalyzer.Rules.Find(DiagnosticIds.RestrictedConstraintUsed))
+                RestrictedConstraintAnalyzer.Rules.Find(DiagnosticsDetails.RestrictedConstraint.UsedId))
                     .WithLocation(7, 17)
                     .WithArguments("T", "TClass"),
             ];
@@ -66,7 +62,7 @@ public class RestrictedConstraintAnalyzerTests
 
         List<DiagnosticResult> expected = [
             VerifyCS.Diagnostic(
-                RestrictedConstraintAnalyzer.Rules.Find(DiagnosticIds.RestrictedConstraintUsed))
+                RestrictedConstraintAnalyzer.Rules.Find(DiagnosticsDetails.RestrictedConstraint.UsedId))
                     .WithLocation(9, 9)
                     .WithArguments("T", "Get"),
             ];
@@ -93,7 +89,7 @@ public class RestrictedConstraintAnalyzerTests
 
         List<DiagnosticResult> expected = [
             VerifyCS.Diagnostic(
-                RestrictedConstraintAnalyzer.Rules.Find(DiagnosticIds.RestrictedConstraintUsed))
+                RestrictedConstraintAnalyzer.Rules.Find(DiagnosticsDetails.RestrictedConstraint.UsedId))
                     .WithLocation(9, 9)
                     .WithArguments("T", "Get"),
             ];
@@ -126,7 +122,7 @@ public class RestrictedConstraintAnalyzerTests
 
         List<DiagnosticResult> expected = [
             VerifyCS.Diagnostic(
-                RestrictedConstraintAnalyzer.Rules.Find(DiagnosticIds.RestrictedConstraintUsed))
+                RestrictedConstraintAnalyzer.Rules.Find(DiagnosticsDetails.RestrictedConstraint.UsedId))
                     .WithLocation(7, 22)
                     .WithArguments("T", "MyDelegate"),
             ];
@@ -156,11 +152,11 @@ public class RestrictedConstraintAnalyzerTests
 
         List<DiagnosticResult> expected = [
             VerifyCS.Diagnostic(
-                RestrictedConstraintAnalyzer.Rules.Find(DiagnosticIds.RestrictedConstraintUsed))
+                RestrictedConstraintAnalyzer.Rules.Find(DiagnosticsDetails.RestrictedConstraint.UsedId))
                     .WithLocation(8, 17)
                     .WithArguments("T", "IBase"),
             VerifyCS.Diagnostic(
-                RestrictedConstraintAnalyzer.Rules.Find(DiagnosticIds.RestrictedConstraintUsed))
+                RestrictedConstraintAnalyzer.Rules.Find(DiagnosticsDetails.RestrictedConstraint.UsedId))
                     .WithLocation(8, 9)
                     .WithArguments("T", "IBase"),
             ];
@@ -186,7 +182,7 @@ public class RestrictedConstraintAnalyzerTests
 
         List<DiagnosticResult> expected = [
             VerifyCS.Diagnostic(
-                RestrictedConstraintAnalyzer.Rules.Find(DiagnosticIds.RestrictedConstraintUsed))
+                RestrictedConstraintAnalyzer.Rules.Find(DiagnosticsDetails.RestrictedConstraint.UsedId))
                     .WithLocation(7, 9)
                     .WithArguments("T", "IBase"),
             ];
@@ -213,7 +209,7 @@ public class RestrictedConstraintAnalyzerTests
         List<DiagnosticResult> expected = [
 
             VerifyCS.Diagnostic(
-                RestrictedConstraintAnalyzer.Rules.Find(DiagnosticIds.RestrictedConstraintUsed))
+                RestrictedConstraintAnalyzer.Rules.Find(DiagnosticsDetails.RestrictedConstraint.UsedId))
                     .WithLocation(5, 24)
                     .WithArguments("T", "_field"),
             ];
@@ -239,7 +235,7 @@ public class RestrictedConstraintAnalyzerTests
 
         List<DiagnosticResult> expected = [
             VerifyCS.Diagnostic(
-                RestrictedConstraintAnalyzer.Rules.Find(DiagnosticIds.RestrictedConstraintUsed))
+                RestrictedConstraintAnalyzer.Rules.Find(DiagnosticsDetails.RestrictedConstraint.UsedId))
                     .WithLocation(5, 24)
                     .WithArguments("T", "Property"),
             ];
@@ -267,11 +263,11 @@ public class RestrictedConstraintAnalyzerTests
 
         List<DiagnosticResult> expected = [
             VerifyCS.Diagnostic(
-                RestrictedConstraintAnalyzer.Rules.Find(DiagnosticIds.RestrictedConstraintUsed))
+                RestrictedConstraintAnalyzer.Rules.Find(DiagnosticsDetails.RestrictedConstraint.UsedId))
                     .WithLocation(5, 24)
                     .WithArguments("T", "Property1"),
             VerifyCS.Diagnostic(
-                RestrictedConstraintAnalyzer.Rules.Find(DiagnosticIds.RestrictedConstraintUsed))
+                RestrictedConstraintAnalyzer.Rules.Find(DiagnosticsDetails.RestrictedConstraint.UsedId))
                     .WithLocation(7, 24)
                     .WithArguments("T", "Property2"),
             ];
@@ -315,7 +311,7 @@ public class RestrictedConstraintAnalyzerTests
 
         List<DiagnosticResult> expected = [
             VerifyCS.Diagnostic(
-                RestrictedConstraintAnalyzer.Rules.Find(DiagnosticIds.RestrictedConstraintUsed))
+                RestrictedConstraintAnalyzer.Rules.Find(DiagnosticsDetails.RestrictedConstraint.UsedId))
                     .WithLocation(18, 9)
                     .WithArguments("T", "Get"),
             ];
@@ -350,7 +346,7 @@ public class RestrictedConstraintAnalyzerTests
 
         List<DiagnosticResult> expected = [
             VerifyCS.Diagnostic(
-                RestrictedConstraintAnalyzer.Rules.Find(DiagnosticIds.RestrictedConstraintUsed))
+                RestrictedConstraintAnalyzer.Rules.Find(DiagnosticsDetails.RestrictedConstraint.UsedId))
                     .WithLocation(13, 9)
                     .WithArguments("T", "Get"),
             ];

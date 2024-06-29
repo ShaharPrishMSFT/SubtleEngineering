@@ -6,7 +6,7 @@
     using System.Linq;
     using Microsoft.CodeAnalysis;
     using Microsoft.CodeAnalysis.CSharp.Syntax;
-    using Microsoft.CodeAnalysis.FlowAnalysis;
+    using SubtleEngineering.Analyzers.Decorators;
 
     public static class Helpers
     {
@@ -96,6 +96,9 @@
         public static IEnumerable<AttributeData> GetAttributesOfType<T>(this ImmutableArray<AttributeData> attributes)
             => attributes.Where(a => a.AttributeClass.IsOfType<T>());
 
+        public static bool HasAttribute<T>(this ISymbol symbol)
+            => symbol.GetAttributes().GetAttributesOfType<T>().Any();
+            
         public static string GetContainingNodeName(this INamedTypeSymbol symbol)
         {
             var containingSymbol = symbol.ContainingSymbol;
@@ -128,6 +131,19 @@
             }
 
             return false;
+        }
+
+        public static bool IsPropertyIdentifier(this IdentifierNameSyntax identifierName, IPropertySymbol propertySymbol)
+        {
+            var isMatchingName = identifierName.Identifier.Text == propertySymbol.Name;
+
+            var isMemberAccessWithThis = identifierName.Parent is MemberAccessExpressionSyntax memberAccess &&
+                                         memberAccess.Expression is ThisExpressionSyntax;
+
+            var isDirectPropertyAccess = identifierName.Parent is AssignmentExpressionSyntax assignExpr &&
+                                         assignExpr.Left == identifierName;
+
+            return isMatchingName && (isMemberAccessWithThis || isDirectPropertyAccess);
         }
     }
 }

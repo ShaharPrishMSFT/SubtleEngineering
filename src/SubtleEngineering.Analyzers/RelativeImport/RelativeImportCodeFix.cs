@@ -14,7 +14,7 @@
     [ExportCodeFixProvider(LanguageNames.CSharp, Name = nameof(RelativeImportCodeFix)), Shared]
     public class RelativeImportCodeFix : CodeFixProvider
     {
-        public override ImmutableArray<string> FixableDiagnosticIds => ImmutableArray.Create(DiagnosticIds.DoNotUseRelativeImportUsingStatements);
+        public override ImmutableArray<string> FixableDiagnosticIds => ImmutableArray.Create(DiagnosticsDetails.RelativeImport.DoNotUseRelativeImportUsingStatementsId);
 
         public override FixAllProvider GetFixAllProvider()
         {
@@ -39,7 +39,7 @@
                     equivalenceKey: "UseFullyQualifiedNamespace"),
                 diagnostic);
         }
-
+            
         private async Task<Document> FixUsingDirectiveAsync(CodeFixContext context, UsingDirectiveSyntax usingDirective, Diagnostic diagnostic, CancellationToken cancellationToken)
         {
             var document = context.Document;

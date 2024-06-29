@@ -36,7 +36,7 @@ public class RelativeImportCodeFixTests
 
         List<DiagnosticResult> expected = [
             VerifyCf.Diagnostic(
-                RelativeImportAnalyzer.Rules.Find(DiagnosticIds.DoNotUseRelativeImportUsingStatements))
+                RelativeImportAnalyzer.Rules.Find(DiagnosticsDetails.RelativeImport.DoNotUseRelativeImportUsingStatementsId))
                     .WithLocation(7, 5)
                     .WithArguments("B.C", "A.B.C"),
             ];
