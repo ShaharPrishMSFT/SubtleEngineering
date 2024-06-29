@@ -81,44 +81,48 @@
                     .Constructors
                     .Where(x => x.DeclaredAccessibility != Accessibility.Private && !x.IsImplicitlyDeclared && !x.HasAttribute<ExcludeFromExhaustiveAnalysisAttribute>());
 
-                if (constructors.Count() != 1)
+                if (constructors.Count() > 1)
                 {
                     var diagnostic = Diagnostic.Create(Rules[SE1032], namedTypeSymbol.Locations[0], namedTypeSymbol.ToDisplayString());
                     context.ReportDiagnostic(diagnostic);
                     return;
                 }
 
-                var constructor = constructors.Single();
+                var constructor = constructors.SingleOrDefault();
 
-                var constructorSyntax = constructor
-                    .DeclaringSyntaxReferences
-                    .FirstOrDefault()
-                    ?.GetSyntax(context.CancellationToken)
-                    as ConstructorDeclarationSyntax;
-
-                if (constructorSyntax != null)
+                if (constructor != null)
                 {
-                    var assignedProperties = constructorSyntax
-                        .Body
-                        .DescendantNodes()
-                        .OfType<AssignmentExpressionSyntax>()
-                        .Select(x => x.Left.DescendantNodesAndSelf().FirstOrDefault(statement => statement is IdentifierNameSyntax) as IdentifierNameSyntax)
-                        .Where(x => x != null)
-                        .Select(x => potentiallyBad.FirstOrDefault(prop => x.IsPropertyIdentifier(prop)))
-                        .Where(x => x != null)
-                        .ToList();
+
+                    var constructorSyntax = constructor
+                        .DeclaringSyntaxReferences
+                        .FirstOrDefault()
+                        ?.GetSyntax(context.CancellationToken)
+                        as ConstructorDeclarationSyntax;
+
+                    if (constructorSyntax != null)
+                    {
+                        var assignedProperties = constructorSyntax
+                            .Body
+                            .DescendantNodes()
+                            .OfType<AssignmentExpressionSyntax>()
+                            .Select(x => x.Left.DescendantNodesAndSelf().FirstOrDefault(statement => statement is IdentifierNameSyntax) as IdentifierNameSyntax)
+                            .Where(x => x != null)
+                            .Select(x => potentiallyBad.FirstOrDefault(prop => x.IsPropertyIdentifier(prop)))
+                            .Where(x => x != null)
+                            .ToList();
 
 
-                    potentiallyBad.RemoveAll(x => assignedProperties.Contains(x, SymbolEqualityComparer.Default));
-                }
-                else if (constructorSyntax == null && !namedTypeSymbol.IsRecord)
-                {
-                    var typeDiagnostic = Diagnostic.Create(Rules[SE1033], namedTypeSymbol.Locations[0], namedTypeSymbol.ToDisplayString(), DiagnosticsDetails.ExhaustiveInitialization.PrimaryCtorOnNonRecordReason);
-                    context.ReportDiagnostic(typeDiagnostic);
-                }
-                else if (namedTypeSymbol.IsRecord)
-                {
-                    potentiallyBad.RemoveAll(x => HasMatchingParameterName(constructor, x));
+                        potentiallyBad.RemoveAll(x => assignedProperties.Contains(x, SymbolEqualityComparer.Default));
+                    }
+                    else if (constructorSyntax == null && !namedTypeSymbol.IsRecord)
+                    {
+                        var typeDiagnostic = Diagnostic.Create(Rules[SE1033], namedTypeSymbol.Locations[0], namedTypeSymbol.ToDisplayString(), DiagnosticsDetails.ExhaustiveInitialization.PrimaryCtorOnNonRecordReason);
+                        context.ReportDiagnostic(typeDiagnostic);
+                    }
+                    else if (namedTypeSymbol.IsRecord)
+                    {
+                        potentiallyBad.RemoveAll(x => HasMatchingParameterName(constructor, x));
+                    }
                 }
 
                 bool emittedTypeError = false;
@@ -134,7 +138,8 @@
                             if (!emittedTypeError)
                             {
                                 emittedTypeError = true;
-                                var typeDiagnostic = Diagnostic.Create(Rules[SE1030], namedTypeSymbol.Locations[0], namedTypeSymbol.ToDisplayString());
+                                var props = potentiallyBad.Select(x => x.Name).ToImmutableDictionary(x => $"{DiagnosticsDetails.ExhaustiveInitialization.BadPropertyPrefix}_{x}", x => x);
+                                var typeDiagnostic = Diagnostic.Create(Rules[SE1030], namedTypeSymbol.Locations[0], props, namedTypeSymbol.ToDisplayString());
                                 context.ReportDiagnostic(typeDiagnostic);
                             }
 

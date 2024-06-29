@@ -29,6 +29,11 @@
             public const string NotAllowedOnTypeId = "SE1033";
 
             public const string PrimaryCtorOnNonRecordReason = "primary constructors on classes and structs cannot be analyzed for assignment to non-required properties. Use a regular constructor if you need to initialize properties that are not set as required.";
+
+            public const string PropertyEquivalenceKey = "Property";
+            public const string TypeEquivalenceKey = "Property";
+
+            public const string BadPropertyPrefix = "BadProperty_";
         }
     }
 }
