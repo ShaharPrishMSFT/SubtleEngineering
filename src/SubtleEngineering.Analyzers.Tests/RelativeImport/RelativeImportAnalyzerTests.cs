@@ -25,7 +25,7 @@ public class RelativeImportAnalyzerTests
 
         var expected =
             VerifyAn.Diagnostic(
-                RelativeImportAnalyzer.Rules.Find(DiagnosticIds.RelativeImport.DoNotUseRelativeImportUsingStatements))
+                RelativeImportAnalyzer.Rules.Find(DiagnosticsDetails.RelativeImport.DoNotUseRelativeImportUsingStatementsId))
                     .WithLocation(7, 5)
                     .WithArguments("B.C", "A.B.C");
         var sut = CreateSut(code, [expected]);

@@ -122,6 +122,12 @@ public class ExhaustiveInitializationAnalyzerTests
                 {
                     public string MyString { get; set; }
                 }
+
+                [SubtleEngineering.Analyzers.Decorators.ExhaustiveInitialization]
+                class Class_WithExhaustivePropsAndPrimaryCtor(int myInt, string myString)
+                {
+                    required public string MyString { get; set; }
+                }
             }
             """;
 
@@ -155,11 +161,11 @@ public class ExhaustiveInitializationAnalyzerTests
         List<DiagnosticResult> expected =
         [
             VerifyAn.Diagnostic(
-                ExhaustiveInitializationAnalyzer.Rules.Find(DiagnosticIds.ExhaustiveInitialization.TypeInitializationIsNonExhaustive))
+                ExhaustiveInitializationAnalyzer.Rules.Find(DiagnosticsDetails.ExhaustiveInitialization.TypeInitializationIsNonExhaustiveId))
                     .WithLocation(4, 14 + type.Length - "{{type}}".Length)
                     .WithArguments("A.AllPropsB"),
             VerifyAn.Diagnostic(
-                ExhaustiveInitializationAnalyzer.Rules.Find(DiagnosticIds.ExhaustiveInitialization.PropertyIsMissingRequired))
+                ExhaustiveInitializationAnalyzer.Rules.Find(DiagnosticsDetails.ExhaustiveInitialization.PropertyIsMissingRequiredId))
                     .WithLocation(11, 20)
                     .WithArguments("A.AllPropsB", "MyInt"),
         ];
@@ -188,11 +194,11 @@ public class ExhaustiveInitializationAnalyzerTests
         List<DiagnosticResult> expected =
         [
             VerifyAn.Diagnostic(
-                ExhaustiveInitializationAnalyzer.Rules.Find(DiagnosticIds.ExhaustiveInitialization.TypeInitializationIsNonExhaustive))
+                ExhaustiveInitializationAnalyzer.Rules.Find(DiagnosticsDetails.ExhaustiveInitialization.TypeInitializationIsNonExhaustiveId))
                     .WithLocation(4, 14 + type.Length - "{{type}}".Length)
                     .WithArguments("A.AllPropsB"),
             VerifyAn.Diagnostic(
-                ExhaustiveInitializationAnalyzer.Rules.Find(DiagnosticIds.ExhaustiveInitialization.PropertyIsMissingRequired))
+                ExhaustiveInitializationAnalyzer.Rules.Find(DiagnosticsDetails.ExhaustiveInitialization.PropertyIsMissingRequiredId))
                     .WithLocation(6, 20)
                     .WithArguments("A.AllPropsB", "MyInt"),
         ];
@@ -204,7 +210,7 @@ public class ExhaustiveInitializationAnalyzerTests
     [Theory]
     [InlineData("class")]
     [InlineData("struct")]
-    public async Task ClassicPrimaryConstructorUsage(string type)
+    public async Task PrimaryConstructorNotSupported(string type)
     {
         string code = $$"""
             namespace A
@@ -212,7 +218,7 @@ public class ExhaustiveInitializationAnalyzerTests
                 [SubtleEngineering.Analyzers.Decorators.ExhaustiveInitialization]
                 {{type}} AllPropsB(string s)
                 {
-                    public int MyInt { get; set; }
+                    required public int MyInt { get; set; }
                     public string MyString { get; set; } = s;
                 }
             }
@@ -221,17 +227,57 @@ public class ExhaustiveInitializationAnalyzerTests
         List<DiagnosticResult> expected =
         [
             VerifyAn.Diagnostic(
-                ExhaustiveInitializationAnalyzer.Rules.Find(DiagnosticIds.ExhaustiveInitialization.TypeInitializationIsNonExhaustive))
+                ExhaustiveInitializationAnalyzer.Rules.Find(DiagnosticsDetails.ExhaustiveInitialization.TypeInitializationIsNonExhaustiveId))
                     .WithLocation(4, 14 + type.Length - "{{type}}".Length)
                     .WithArguments("A.AllPropsB"),
             VerifyAn.Diagnostic(
-                ExhaustiveInitializationAnalyzer.Rules.Find(DiagnosticIds.ExhaustiveInitialization.PropertyIsMissingRequired))
-                    .WithLocation(6, 20)
-                    .WithArguments("A.AllPropsB", "MyInt"),
+                ExhaustiveInitializationAnalyzer.Rules.Find(DiagnosticsDetails.ExhaustiveInitialization.NotAllowedOnTypeId))
+                    .WithLocation(4, 14 + type.Length - "{{type}}".Length)
+                    .WithArguments("A.AllPropsB", DiagnosticsDetails.ExhaustiveInitialization.PrimaryCtorOnNonRecordReason),
             VerifyAn.Diagnostic(
-                ExhaustiveInitializationAnalyzer.Rules.Find(DiagnosticIds.ExhaustiveInitialization.PropertyIsMissingRequired))
+                ExhaustiveInitializationAnalyzer.Rules.Find(DiagnosticsDetails.ExhaustiveInitialization.PropertyIsMissingRequiredId))
                     .WithLocation(7, 23)
                     .WithArguments("A.AllPropsB", "MyString"),
+        ];
+
+        var sut = CreateSut(code, expected);
+        await sut.RunAsync();
+    }
+
+    [Theory]
+    [InlineData("class")]
+    [InlineData("struct")]
+    [InlineData("record")]
+    [InlineData("record struct")]
+    public async Task ConstructorThatsNotExhaustive(string type)
+    {
+        string code = $$"""
+            namespace A
+            {
+                [SubtleEngineering.Analyzers.Decorators.ExhaustiveInitialization]
+                {{type}} AllPropsB
+                {
+                    public AllPropsB(string s)
+                    {
+                        MyString = s;
+                    }
+
+                    public int MyInt { get; set; }
+                    public string MyString { get; set; }
+                }
+            }
+            """;
+
+        List<DiagnosticResult> expected =
+        [
+            VerifyAn.Diagnostic(
+                ExhaustiveInitializationAnalyzer.Rules.Find(DiagnosticsDetails.ExhaustiveInitialization.TypeInitializationIsNonExhaustiveId))
+                    .WithLocation(4, 14 + type.Length - "{{type}}".Length)
+                    .WithArguments("A.AllPropsB"),
+            VerifyAn.Diagnostic(
+                ExhaustiveInitializationAnalyzer.Rules.Find(DiagnosticsDetails.ExhaustiveInitialization.PropertyIsMissingRequiredId))
+                    .WithLocation(11, 20)
+                    .WithArguments("A.AllPropsB", "MyInt"),
         ];
 
         var sut = CreateSut(code, expected);

@@ -14,7 +14,7 @@
     [ExportCodeFixProvider(LanguageNames.CSharp, Name = nameof(RelativeImportCodeFix)), Shared]
     public class RelativeImportCodeFix : CodeFixProvider
     {
-        public override ImmutableArray<string> FixableDiagnosticIds => ImmutableArray.Create(DiagnosticIds.RelativeImport.DoNotUseRelativeImportUsingStatements);
+        public override ImmutableArray<string> FixableDiagnosticIds => ImmutableArray.Create(DiagnosticsDetails.RelativeImport.DoNotUseRelativeImportUsingStatementsId);
 
         public override FixAllProvider GetFixAllProvider()
         {

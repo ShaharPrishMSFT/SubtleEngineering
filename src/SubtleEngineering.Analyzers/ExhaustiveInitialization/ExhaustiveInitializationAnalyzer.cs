@@ -15,26 +15,34 @@
         private const int SE1030 = 0;
         private const int SE1031 = 1;
         private const int SE1032 = 2;
+        private const int SE1033 = 3;
 
         public static readonly ImmutableArray<DiagnosticDescriptor> Rules = ImmutableArray.Create(
             new DiagnosticDescriptor(
-                DiagnosticIds.ExhaustiveInitialization.TypeInitializationIsNonExhaustive,
+                DiagnosticsDetails.ExhaustiveInitialization.TypeInitializationIsNonExhaustiveId,
                 "Type initialization is non-exhaustive.",
                 "Type '{0}' initialization is non-exhaustive.",
                 "Usage",
                 DiagnosticSeverity.Warning,
                 isEnabledByDefault: true),
             new DiagnosticDescriptor(
-                DiagnosticIds.ExhaustiveInitialization.PropertyIsMissingRequired,
+                DiagnosticsDetails.ExhaustiveInitialization.PropertyIsMissingRequiredId,
                 "All properties on this type must be set to 'required'",
                 "Type '{0}' has a property {1} that's not marked as 'required'.",
                 "Usage",
                 DiagnosticSeverity.Warning,
                 isEnabledByDefault: true),
             new DiagnosticDescriptor(
-                DiagnosticIds.ExhaustiveInitialization.OnlyOneConstructorAllowed,
-                "Marking an object as ExhaustiveInitialization means a type can only have one explicitly declared constructor. This type has more.",
+                DiagnosticsDetails.ExhaustiveInitialization.OnlyOneConstructorAllowedId,
+                "Marking a type as ExhaustiveInitialization means a type can only have one explicitly declared constructor. This type has more.",
                 "Type '{0}' has more than one constructor.",
+                "Usage",
+                DiagnosticSeverity.Warning,
+                isEnabledByDefault: true),
+            new DiagnosticDescriptor(
+                DiagnosticsDetails.ExhaustiveInitialization.NotAllowedOnTypeId,
+                "This type is not compatible with the ExhaustiveInitialization attribute.",
+                "Type '{0}' cannot have the ExhaustiveInitialization attribute applied to it because {1}.",
                 "Usage",
                 DiagnosticSeverity.Warning,
                 isEnabledByDefault: true)
@@ -66,20 +74,13 @@
                 }
 
                 // Find accessible, non-clone constructors.
-                var constructors = namedTypeSymbol.Constructors.Where(x =>
-                    x.DeclaredAccessibility != Accessibility.Private &&
-                    !x.IsImplicitlyDeclared /* &&
-                    (x.Parameters.Length != 1 || !x.Parameters[0].Type.Equals(namedTypeSymbol, SymbolEqualityComparer.Default))*/);
-
-                // Structs always have a default constructor
-                //if (namedTypeSymbol.TypeKind == TypeKind.Struct)
-                //{
-                //    constructors = constructors.Where(x => x.Parameters.Count() != 0);
-                //}
+                var constructors = namedTypeSymbol
+                    .Constructors
+                    .Where(x => x.DeclaredAccessibility != Accessibility.Private && !x.IsImplicitlyDeclared);
 
                 if (constructors.Count() != 1)
                 {
-                    var diagnostic = Diagnostic.Create(Rules[SE1031], namedTypeSymbol.Locations[0], namedTypeSymbol.ToDisplayString());
+                    var diagnostic = Diagnostic.Create(Rules[SE1032], namedTypeSymbol.Locations[0], namedTypeSymbol.ToDisplayString());
                     context.ReportDiagnostic(diagnostic);
                     return;
                 }
@@ -107,7 +108,12 @@
 
                     potentiallyBad.RemoveAll(x => assignedProperties.Contains(x, SymbolEqualityComparer.Default));
                 }
-                else
+                else if (constructorSyntax == null && !namedTypeSymbol.IsRecord)
+                {
+                    var typeDiagnostic = Diagnostic.Create(Rules[SE1033], namedTypeSymbol.Locations[0], namedTypeSymbol.ToDisplayString(), DiagnosticsDetails.ExhaustiveInitialization.PrimaryCtorOnNonRecordReason);
+                    context.ReportDiagnostic(typeDiagnostic);
+                }
+                else if (namedTypeSymbol.IsRecord)
                 {
                     potentiallyBad.RemoveAll(x => HasMatchingParameterName(constructor, x));
                 }

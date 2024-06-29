@@ -21,15 +21,6 @@
 		<PackageReference Include="FluentAssertions" />
 		<PackageReference Include="Microsoft.NET.Test.Sdk" />
 		<PackageReference Include="xunit" />
-		<!--<PackageReference Include="SmartAnalyzers.RoslynTestKit" />-->
-		<PackageReference Include="Microsoft.CodeAnalysis" />
-		<!--<PackageReference Include="Microsoft.CodeAnalysis.Common"/>
-		<PackageReference Include="Microsoft.CodeAnalysis.CSharp.Workspaces"/>
-		<PackageReference Include="Microsoft.CodeAnalysis.Features" />
-		<PackageReference Include="Microsoft.CodeAnalysis.VisualBasic.Workspaces" />
-		<PackageReference Include="Microsoft.CodeAnalysis.VisualBasic"/>
-		<PackageReference Include="Microsoft.CodeAnalysis.Workspaces.Common"/>
-		<PackageReference Include="Microsoft.CodeAnalysis.Scripting.Common" />-->
 		<PackageReference Include="Microsoft.Bcl.AsyncInterfaces" PrivateAssets="all" />
 		<PackageReference Include="Microsoft.CodeAnalysis.CSharp.Analyzer.Testing.MSTest" />
 		<PackageReference Include="Microsoft.CodeAnalysis.CSharp.CodeFix.Testing.MSTest" />
@@ -37,6 +28,9 @@
 		<PackageReference Include="Microsoft.CodeAnalysis.VisualBasic.Analyzer.Testing.MSTest" />
 		<PackageReference Include="Microsoft.CodeAnalysis.VisualBasic.CodeFix.Testing.MSTest" />
 		<PackageReference Include="Microsoft.CodeAnalysis.VisualBasic.CodeRefactoring.Testing.MSTest" />
+		<PackageReference Include="Microsoft.CodeAnalysis" VersionOverride="4.10.0" />
+		<PackageReference Include="Microsoft.CodeAnalysis.CSharp" VersionOverride="4.10.0" />
+		<PackageReference Include="Microsoft.CodeAnalysis.CSharp.Workspaces" VersionOverride="4.10.0" />
 		<PackageReference Include="xunit.runner.visualstudio">
 		  <PrivateAssets>all</PrivateAssets>
 		  <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>

@@ -20,7 +20,7 @@
 
         public static readonly ImmutableArray<DiagnosticDescriptor> Rules = ImmutableArray.Create(
             new DiagnosticDescriptor(
-                DiagnosticIds.RestrictedConstraint.Used,
+                DiagnosticsDetails.RestrictedConstraint.UsedId,
                 "Restricted constraint for Generic",
                 "The generic parameter {0} on element {1} is of a disallowed type.",
                 "Usage",
