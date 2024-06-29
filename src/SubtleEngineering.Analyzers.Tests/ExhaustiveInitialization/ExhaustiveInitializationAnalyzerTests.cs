@@ -284,6 +284,118 @@ public class ExhaustiveInitializationAnalyzerTests
         await sut.RunAsync();
     }
 
+    [Theory]
+    [InlineData("class")]
+    [InlineData("struct")]
+    [InlineData("record")]
+    [InlineData("record struct")]
+    public async Task MultipleConstructorsNotSupported(string type)
+    {
+        string code = $$"""
+            namespace A
+            {
+                [SubtleEngineering.Analyzers.Decorators.ExhaustiveInitialization]
+                {{type}} AllPropsB
+                {
+                    public AllPropsB(string s)
+                    {
+                        MyString = s;
+                    }
+
+                    public AllPropsB(int y)
+                    {
+                    }
+            
+                    public int MyInt { get; set; }
+                    public string MyString { get; set; }
+                }
+            }
+            """;
+
+        List<DiagnosticResult> expected =
+        [
+            VerifyAn.Diagnostic(
+                ExhaustiveInitializationAnalyzer.Rules.Find(DiagnosticsDetails.ExhaustiveInitialization.OnlyOneConstructorAllowedId))
+                    .WithLocation(4, 14 + type.Length - "{{type}}".Length)
+                    .WithArguments("A.AllPropsB"),
+        ];
+
+        var sut = CreateSut(code, expected);
+        await sut.RunAsync();
+    }
+
+    [Theory]
+    [InlineData("class")]
+    [InlineData("struct")]
+    [InlineData("record")]
+    [InlineData("record struct")]
+    public async Task IgnoredPropertiesAreIgnored(string type)
+    {
+        string code = $$"""
+            namespace A
+            {
+                [SubtleEngineering.Analyzers.Decorators.ExhaustiveInitialization]
+                {{type}} AllPropsB
+                {
+                    public AllPropsB(string s)
+                    {
+                        MyString = s;
+                    }
+
+                    [SubtleEngineering.Analyzers.Decorators.ExcludeFromExhaustiveAnalysis]
+                    public int MyInt { get; set; }
+                    
+                    required public string MyString { get; set; }
+                }
+            }
+            """;
+
+        List<DiagnosticResult> expected =
+        [
+        ];
+
+        var sut = CreateSut(code, expected);
+        await sut.RunAsync();
+    }
+
+    [Theory]
+    [InlineData("class")]
+    [InlineData("struct")]
+    [InlineData("record")]
+    [InlineData("record struct")]
+    public async Task IgnoredConstructorsAreIgnored(string type)
+    {
+        string code = $$"""
+            namespace A
+            {
+                [SubtleEngineering.Analyzers.Decorators.ExhaustiveInitialization]
+                {{type}} AllPropsB
+                {
+                    [SubtleEngineering.Analyzers.Decorators.ExcludeFromExhaustiveAnalysis]
+                    public AllPropsB(string s)
+                    {
+                    }
+
+                    public AllPropsB(int i)
+                    {
+                        MyInt = i;
+                    }
+
+                    public int MyInt { get; set; }
+                    
+                    required public string MyString { get; set; }
+                }
+            }
+            """;
+
+        List<DiagnosticResult> expected =
+        [
+        ];
+
+        var sut = CreateSut(code, expected);
+        await sut.RunAsync();
+    }
+
 
     private VerifyAn.Test CreateSut(string code, List<DiagnosticResult> expected)
     {

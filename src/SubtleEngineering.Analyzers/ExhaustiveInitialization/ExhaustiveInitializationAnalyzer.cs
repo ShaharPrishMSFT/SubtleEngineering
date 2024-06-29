@@ -62,9 +62,12 @@
         {
             var namedTypeSymbol = (INamedTypeSymbol)context.Symbol;
             if ((namedTypeSymbol.TypeKind == TypeKind.Class || namedTypeSymbol.TypeKind == TypeKind.Struct) &&
-                GetMandatoryAttribute(namedTypeSymbol).Any())
+                namedTypeSymbol.HasAttribute<ExhaustiveInitializationAttribute>())
             {
-                var allNonePrivateProperties = namedTypeSymbol.GetMembers().OfType<IPropertySymbol>().Where(x => x.DeclaredAccessibility != Accessibility.Private && x.SetMethod != null && !x.IsStatic);
+                var allNonePrivateProperties = namedTypeSymbol
+                    .GetMembers()
+                    .OfType<IPropertySymbol>()
+                    .Where(x => x.DeclaredAccessibility != Accessibility.Private && x.SetMethod != null && !x.IsStatic && !x.HasAttribute<ExcludeFromExhaustiveAnalysisAttribute>());
 
                 var potentiallyBad = allNonePrivateProperties.Where(x => !x.IsRequired).ToList();
 
@@ -76,7 +79,7 @@
                 // Find accessible, non-clone constructors.
                 var constructors = namedTypeSymbol
                     .Constructors
-                    .Where(x => x.DeclaredAccessibility != Accessibility.Private && !x.IsImplicitlyDeclared);
+                    .Where(x => x.DeclaredAccessibility != Accessibility.Private && !x.IsImplicitlyDeclared && !x.HasAttribute<ExcludeFromExhaustiveAnalysisAttribute>());
 
                 if (constructors.Count() != 1)
                 {
@@ -146,17 +149,6 @@
         bool HasMatchingParameterName(IMethodSymbol methodSymbol, IPropertySymbol propertySymbol)
         {
             return methodSymbol.Parameters.Any(p => p.Name == propertySymbol.Name);
-        }
-
-        private static IEnumerable<AttributeData> GetMandatoryAttribute(ISymbol typeParameter)
-        {
-            foreach (var attribute in typeParameter.GetAttributes())
-            {
-                if (attribute.AttributeClass.IsAssignableTo<ExhaustiveInitializationAttribute>())
-                {
-                    yield return attribute;
-                }
-            }
         }
     }
 }

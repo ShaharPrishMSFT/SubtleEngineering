@@ -6,6 +6,7 @@
     using System.Linq;
     using Microsoft.CodeAnalysis;
     using Microsoft.CodeAnalysis.CSharp.Syntax;
+    using SubtleEngineering.Analyzers.Decorators;
 
     public static class Helpers
     {
@@ -95,6 +96,9 @@
         public static IEnumerable<AttributeData> GetAttributesOfType<T>(this ImmutableArray<AttributeData> attributes)
             => attributes.Where(a => a.AttributeClass.IsOfType<T>());
 
+        public static bool HasAttribute<T>(this ISymbol symbol)
+            => symbol.GetAttributes().GetAttributesOfType<T>().Any();
+            
         public static string GetContainingNodeName(this INamedTypeSymbol symbol)
         {
             var containingSymbol = symbol.ContainingSymbol;
