@@ -12,6 +12,7 @@
     using Microsoft.CodeAnalysis.Simplification;
     using System.Linq;
     using System;
+    using Microsoft.CodeAnalysis.Editing;
 
     [ExportCodeFixProvider(LanguageNames.CSharp, Name = nameof(ExhaustiveInitializationCodeFix)), Shared]
     public class ExhaustiveInitializationCodeFix : CodeFixProvider
@@ -54,7 +55,7 @@
                         CodeAction.Create(
                             title: "Make all properties required",
                             createChangedDocument: c => FixEntireType(context, typeSyntax, diagnostic, c),
-                            equivalenceKey: DiagnosticsDetails.ExhaustiveInitialization.PropertyEquivalenceKey),
+                            equivalenceKey: DiagnosticsDetails.ExhaustiveInitialization.TypeEquivalenceKey),
                         diagnostic);
                 }
             }
@@ -76,6 +77,11 @@
 
         private static MemberDeclarationSyntax GetFixedProperty(MemberDeclarationSyntax memberDeclarationSyntax)
         {
+            if (memberDeclarationSyntax.Modifiers.Any(x => x.IsKind(SyntaxKind.RequiredKeyword)))
+            {
+                return memberDeclarationSyntax;
+            }
+
             var requiredModifier = SyntaxFactory.Token(SyntaxKind.RequiredKeyword);
             var newModifiers = memberDeclarationSyntax.Modifiers.Insert(0, requiredModifier);
 
@@ -86,7 +92,7 @@
         private async Task<Document> FixEntireType(CodeFixContext context, TypeDeclarationSyntax typeSyntax, Diagnostic diagnostic, CancellationToken ct)
         {
             var document = context.Document;
-            var semanticModel = await document.GetSemanticModelAsync(ct).ConfigureAwait(false);
+            var editor = await DocumentEditor.CreateAsync(document, ct);
 
             // Find all relevant properties.
             var propertiesToFix = diagnostic
@@ -95,32 +101,18 @@
                 .Select(x => x.Value)
                 .ToArray();
 
-            var root = await document.GetSyntaxRootAsync(ct).ConfigureAwait(false);
-            var newRoot = root;
             foreach (var member in typeSyntax.Members.OfType<PropertyDeclarationSyntax>().Where(x => propertiesToFix.Contains(x.Identifier.Text)))
             {
                 // Add the 'required' modifier to the member declaration
                 var newMember = GetFixedProperty(member);
-                newRoot = newRoot.ReplaceNode(member, newMember);
+                editor.ReplaceNode(member, newMember);
             }
-            return document.WithSyntaxRoot(newRoot);
-        }
+            var newRoot = editor.GetChangedRoot();
+            var newDocument = document.WithSyntaxRoot(newRoot);
 
-        private async Task<Document> FixUsingDirectiveAsync(CodeFixContext context, UsingDirectiveSyntax usingDirective, Diagnostic diagnostic, CancellationToken cancellationToken)
-        {
-            var document = context.Document;
-            var semanticModel = await document.GetSemanticModelAsync(cancellationToken).ConfigureAwait(false);
-            var symbol = semanticModel.GetSymbolInfo(usingDirective.Name);
-            var fullyQualifiedNamespace = symbol.Symbol.ToDisplayString(Helpers.FullyQualifiedNamespaceFormat);
-            var qualifiedNameSyntax = SyntaxFactory.ParseName(fullyQualifiedNamespace)
-                .WithTriviaFrom(usingDirective.Name)
-                .WithAdditionalAnnotations(Simplifier.Annotation);
-
-            var newUsingDirective = usingDirective.WithName(qualifiedNameSyntax);
-            var root = await document.GetSyntaxRootAsync(cancellationToken).ConfigureAwait(false);
-            var newRoot = root.ReplaceNode(usingDirective, newUsingDirective);
-
-            return document.WithSyntaxRoot(newRoot);
+            newRoot = await newDocument.GetSyntaxRootAsync(ct);
+            var props = newRoot.DescendantNodesAndSelf().OfType<PropertyDeclarationSyntax>().ToArray();
+            return newDocument;
         }
     }
 }
