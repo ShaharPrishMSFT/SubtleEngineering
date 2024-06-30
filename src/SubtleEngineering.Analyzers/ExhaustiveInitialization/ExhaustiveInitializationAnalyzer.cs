@@ -16,6 +16,7 @@
         private const int SE1031 = 1;
         private const int SE1032 = 2;
         private const int SE1033 = 3;
+        private const int SE1034 = 4;
 
         public static readonly ImmutableArray<DiagnosticDescriptor> Rules = ImmutableArray.Create(
             new DiagnosticDescriptor(
@@ -45,6 +46,13 @@
                 "Type '{0}' cannot have the ExhaustiveInitialization attribute applied to it because {1}.",
                 "Usage",
                 DiagnosticSeverity.Warning,
+                isEnabledByDefault: true),
+            new DiagnosticDescriptor(
+                DiagnosticsDetails.ExhaustiveInitialization.PrimaryDefaultConstructorValuesNotAllowedId,
+                "Record with default values in primary constructor",
+                "Record type '{0}' constructor parameter/property {1} has a default initialization value",
+                "Usage",
+                DiagnosticSeverity.Warning,
                 isEnabledByDefault: true)
             );
 
@@ -60,6 +68,9 @@
 
         private void AnalyzeSymbol(SymbolAnalysisContext context)
         {
+            bool needToEmitTypeWarning = false;
+            List<IPropertySymbol> potentiallyBadProperties = new List<IPropertySymbol>();
+            List<IParameterSymbol> badParameters = new List<IParameterSymbol>();
             var namedTypeSymbol = (INamedTypeSymbol)context.Symbol;
             if ((namedTypeSymbol.TypeKind == TypeKind.Class || namedTypeSymbol.TypeKind == TypeKind.Struct) &&
                 namedTypeSymbol.HasAttribute<ExhaustiveInitializationAttribute>())
@@ -69,9 +80,9 @@
                     .OfType<IPropertySymbol>()
                     .Where(x => x.DeclaredAccessibility != Accessibility.Private && x.SetMethod != null && !x.IsStatic && !x.HasAttribute<ExcludeFromExhaustiveAnalysisAttribute>());
 
-                var potentiallyBad = allNonePrivateProperties.Where(x => !x.IsRequired).ToList();
+                potentiallyBadProperties = allNonePrivateProperties.Where(x => !x.IsRequired).ToList();
 
-                if (potentiallyBad.Count == 0)
+                if (potentiallyBadProperties.Count == 0)
                 {
                     return;
                 }
@@ -84,16 +95,16 @@
                 if (constructors.Count() > 1)
                 {
                     var diagnostic = Diagnostic.Create(Rules[SE1032], namedTypeSymbol.Locations[0], namedTypeSymbol.ToDisplayString());
-                    context.ReportDiagnostic(diagnostic);
+                    ReportDiagnostic(diagnostic);
                     return;
                 }
 
                 var constructor = constructors.SingleOrDefault();
-
+                ConstructorDeclarationSyntax constructorSyntax = null;
                 if (constructor != null)
                 {
 
-                    var constructorSyntax = constructor
+                    constructorSyntax = constructor
                         .DeclaringSyntaxReferences
                         .FirstOrDefault()
                         ?.GetSyntax(context.CancellationToken)
@@ -107,26 +118,25 @@
                             .OfType<AssignmentExpressionSyntax>()
                             .Select(x => x.Left.DescendantNodesAndSelf().FirstOrDefault(statement => statement is IdentifierNameSyntax) as IdentifierNameSyntax)
                             .Where(x => x != null)
-                            .Select(x => potentiallyBad.FirstOrDefault(prop => x.IsPropertyIdentifier(prop)))
+                            .Select(x => potentiallyBadProperties.FirstOrDefault(prop => x.IsPropertyIdentifier(prop)))
                             .Where(x => x != null)
                             .ToList();
 
 
-                        potentiallyBad.RemoveAll(x => assignedProperties.Contains(x, SymbolEqualityComparer.Default));
+                        potentiallyBadProperties.RemoveAll(x => assignedProperties.Contains(x, SymbolEqualityComparer.Default));
                     }
                     else if (constructorSyntax == null && !namedTypeSymbol.IsRecord)
                     {
                         var typeDiagnostic = Diagnostic.Create(Rules[SE1033], namedTypeSymbol.Locations[0], namedTypeSymbol.ToDisplayString(), DiagnosticsDetails.ExhaustiveInitialization.PrimaryCtorOnNonRecordReason);
-                        context.ReportDiagnostic(typeDiagnostic);
+                        ReportDiagnostic(typeDiagnostic);
                     }
                     else if (namedTypeSymbol.IsRecord)
                     {
-                        potentiallyBad.RemoveAll(x => HasMatchingParameterName(constructor, x));
+                        potentiallyBadProperties.RemoveAll(x => HasMatchingParameterName(constructor, x));
                     }
                 }
 
-                bool emittedTypeError = false;
-                foreach (var property in potentiallyBad)
+                foreach (var property in potentiallyBadProperties)
                 {
                     if (property.DeclaringSyntaxReferences.Length > 0)
                     {
@@ -135,19 +145,46 @@
 
                         if (!property.IsRequired)
                         {
-                            if (!emittedTypeError)
-                            {
-                                emittedTypeError = true;
-                                var props = potentiallyBad.Select(x => x.Name).ToImmutableDictionary(x => $"{DiagnosticsDetails.ExhaustiveInitialization.BadPropertyPrefix}_{x}", x => x);
-                                var typeDiagnostic = Diagnostic.Create(Rules[SE1030], namedTypeSymbol.Locations[0], props, namedTypeSymbol.ToDisplayString());
-                                context.ReportDiagnostic(typeDiagnostic);
-                            }
-
                             var diagnostic = Diagnostic.Create(Rules[SE1031], property.Locations[0], namedTypeSymbol.ToDisplayString(), property.Name);
-                            context.ReportDiagnostic(diagnostic);
+                            ReportDiagnostic(diagnostic);
                         }
                     }
                 }
+
+                // If this is a record, check for default values in the primary constructor
+                if (namedTypeSymbol.IsRecord && constructor != null && constructorSyntax == null)
+                {
+                    var defaultValues = constructor
+                        .Parameters
+                        .Where(x => x.HasExplicitDefaultValue)
+                        .ToList();
+
+                    foreach (var param in defaultValues)
+                    {
+                        var syntaxReference = param.DeclaringSyntaxReferences[0];
+                        var syntax = syntaxReference.GetSyntax();
+                        var diagnostic = Diagnostic.Create(Rules[SE1034], syntax.GetLocation(), namedTypeSymbol.ToDisplayString(), param.Name);
+                        badParameters.Add(param);
+                        ReportDiagnostic(diagnostic);
+                    }
+                }
+            }
+
+            if (needToEmitTypeWarning)
+            {
+                var props = potentiallyBadProperties
+                    .Select(x => (DiagnosticsDetails.ExhaustiveInitialization.BadPropertyPrefix, x.Name))
+                    .Concat(badParameters.Select(x => (DiagnosticsDetails.ExhaustiveInitialization.BadParameterPrefix, x.Name)))
+                    .ToImmutableDictionary(x => $"{x.Item1}_{x.Item2}", x => x.Item2);
+
+                var typeDiagnostic = Diagnostic.Create(Rules[SE1030], namedTypeSymbol.Locations[0], props, namedTypeSymbol.ToDisplayString());
+                context.ReportDiagnostic(typeDiagnostic);
+            }
+
+            void ReportDiagnostic(Diagnostic diagnostic)
+            {
+                context.ReportDiagnostic(diagnostic);
+                needToEmitTypeWarning = true;
             }
         }
 

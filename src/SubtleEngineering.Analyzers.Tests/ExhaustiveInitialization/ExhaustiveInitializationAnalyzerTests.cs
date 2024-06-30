@@ -208,6 +208,38 @@ public class ExhaustiveInitializationAnalyzerTests
     }
 
     [Theory]
+    [InlineData("record")]
+    [InlineData("record struct")]
+    public async Task RecordWithDefaultPrimaryCtorValuesFails(string type)
+    {
+        string code = $$"""
+            namespace A
+            {
+                [SubtleEngineering.Analyzers.Decorators.ExhaustiveInitialization]
+                {{type}} AllPropsB(string MyString = "xxx")
+                {
+                }
+            }
+            """;
+
+        var columnDelta = type.Length - "{{type}}".Length;
+        List<DiagnosticResult> expected =
+        [
+            VerifyAn.Diagnostic(
+                ExhaustiveInitializationAnalyzer.Rules.Find(DiagnosticsDetails.ExhaustiveInitialization.TypeInitializationIsNonExhaustiveId))
+                    .WithLocation(4, 14 + columnDelta)
+                    .WithArguments("A.AllPropsB"),
+            VerifyAn.Diagnostic(
+                ExhaustiveInitializationAnalyzer.Rules.Find(DiagnosticsDetails.ExhaustiveInitialization.PrimaryDefaultConstructorValuesNotAllowedId))
+                    .WithLocation(4, 24 + columnDelta)
+                    .WithArguments("A.AllPropsB", "MyString"),
+        ];
+
+        var sut = CreateSut(code, expected);
+        await sut.RunAsync();
+    }
+
+    [Theory]
     [InlineData("class")]
     [InlineData("struct")]
     public async Task PrimaryConstructorNotSupported(string type)
