@@ -56,7 +56,7 @@
                     // Register a code action that will invoke the fix.
                     context.RegisterCodeFix(
                         CodeAction.Create(
-                            title: "Make all properties required",
+                            title: "Make type exhaustive",
                             createChangedDocument: c => FixEntireType(context, typeSyntax, diagnostic, c),
                             equivalenceKey: DiagnosticsDetails.ExhaustiveInitialization.TypeEquivalenceKey),
                         diagnostic);
@@ -69,7 +69,7 @@
                     // Register a code action that will invoke the fix.
                     context.RegisterCodeFix(
                         CodeAction.Create(
-                            title: "Make type exhaustive",
+                            title: "Remove default parameter/proprerty value",
                             createChangedDocument: c => FixParameter(context, paramSyntax, diagnostic, c),
                             equivalenceKey: DiagnosticsDetails.ExhaustiveInitialization.ParameterEquivalenceKey),
                         diagnostic);
