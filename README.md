@@ -143,6 +143,13 @@ public class MyClass
 
 **How it helps engineering**: See SE1030
 
+#### SE1034: PrimaryDefaultConstructorValuesNotAllowed
+
+**What it looks for**: Primary constructors are not allowed to have default values on implicit constructor properties.
+
+**Why**: Default arguments on the primary constructor are not allowed on exhauste initialization types.
+
+**How it helps engineering**: See SE1030
 
 
 #### Code fix available
