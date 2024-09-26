@@ -155,4 +155,11 @@ public class MyClass
 #### Code fix available
 A code fix is available for SE1030 and SE1031 - will add required to properties that are missing it.
 
+#### SE1040: ObsoleteELementsShouldBeHidden
+
+**What it looks for**: When an entity is marked with the [Obsolete] attribute, but not with the [EditorBrowsable(EditorBrowsableState.Never)] attribute
+
+**Why**: When obsoleting an entity, it's preferable that developers stop seeing it in their intellisense. Note that if it needs to be visible, the developer may also decide to use other values of EditorBrowsableState.
+
+**How it helps engineering**: Less chance of deprecated elements being used in new code.
 
