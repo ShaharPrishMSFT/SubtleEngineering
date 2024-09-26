@@ -63,6 +63,15 @@
         {
             var root = await document.GetSyntaxRootAsync(cancellationToken).ConfigureAwait(false);
 
+            // Track the declaration node so we can find it after modifying the root
+            root = root.TrackNodes(declarationNode);
+
+            // Add using directive for System.ComponentModel if it's not already present
+            var rootWithUsing = AddUsingDirectiveIfMissing(root, "System.ComponentModel");
+
+            // Get the updated declaration node from the new root
+            var updatedDeclarationNode = rootWithUsing.GetCurrentNode(declarationNode);
+
             // Create the [EditorBrowsable(EditorBrowsableState.Never)] attribute
             var editorBrowsableAttribute = SyntaxFactory.Attribute(
                 SyntaxFactory.ParseName("EditorBrowsable"),
@@ -75,16 +84,12 @@
                                 SyntaxFactory.IdentifierName("Never"))))));
 
             var newAttributeList = SyntaxFactory.AttributeList(SyntaxFactory.SingletonSeparatedList(editorBrowsableAttribute));
-                //.WithTrailingTrivia(SyntaxFactory.CarriageReturnLineFeed);
 
-            // Add using directive for System.ComponentModel if it's not already present
-            var rootWithUsing = AddUsingDirectiveIfMissing(root, "System.ComponentModel");
-
-            // Add the attribute to the declaration node
-            SyntaxNode newDeclarationNode = AddAttributeToDeclaration(declarationNode, newAttributeList);
+            // Add the attribute to the updated declaration node
+            var modifiedDeclarationNode = AddAttributeToDeclaration(updatedDeclarationNode, newAttributeList);
 
             // Replace the old node with the new node in the syntax tree
-            var newRoot = rootWithUsing.ReplaceNode(declarationNode, newDeclarationNode);
+            var newRoot = rootWithUsing.ReplaceNode(updatedDeclarationNode, modifiedDeclarationNode);
 
             // Return the new document
             return document.WithSyntaxRoot(newRoot);
@@ -97,8 +102,8 @@
                 var hasUsingDirective = compilationUnit.Usings.Any(u => u.Name.ToString() == namespaceName);
                 if (!hasUsingDirective)
                 {
-                    var usingDirective = SyntaxFactory.UsingDirective(SyntaxFactory.ParseName(namespaceName))
-                        .WithTrailingTrivia(SyntaxFactory.CarriageReturnLineFeed);
+                    var usingDirective = SyntaxFactory.UsingDirective(SyntaxFactory.ParseName(namespaceName));
+                        //.WithTrailingTrivia(SyntaxFactory.CarriageReturnLineFeed);
 
                     compilationUnit = compilationUnit.AddUsings(usingDirective);
                     return compilationUnit;

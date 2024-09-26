@@ -15,7 +15,6 @@ public class CorrectObsolescenceCodeFixTests
     {
         const string code = """
             using System;
-            using System.ComponentModel;
             
             class TestClass
             {
@@ -61,7 +60,6 @@ public class CorrectObsolescenceCodeFixTests
     {
         const string code = """
             using System;
-            using System.ComponentModel;
             
             [Obsolete]
             public class {|#0:ObsoleteClass|}
@@ -72,7 +70,7 @@ public class CorrectObsolescenceCodeFixTests
         const string fixedCode = """
             using System;
             using System.ComponentModel;
-
+            
             [Obsolete]
             [EditorBrowsable(EditorBrowsableState.Never)]
             public class ObsoleteClass
@@ -96,7 +94,6 @@ public class CorrectObsolescenceCodeFixTests
     {
         const string code = """
             using System;
-            using System.ComponentModel;
             
             class TestClass
             {
@@ -133,7 +130,6 @@ public class CorrectObsolescenceCodeFixTests
     {
         const string code = """
             using System;
-            using System.ComponentModel;
             
             class TestClass
             {
