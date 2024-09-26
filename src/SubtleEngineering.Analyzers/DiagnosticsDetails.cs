@@ -2,26 +2,26 @@
 {
     public class DiagnosticsDetails
     {
-        public class RequireUsing
+        public class RequireUsing // TVM1000+
         {
             public const string TypeMustBeInstantiatedWithinAUsingStatementId = "SE1000";
             public const string TypesDecoratedWithTheRequireUsingAttributeMustInheritFromIDisposableId = "SE1001";
             public const string MethodsReturnsDecoratedWithTheRequireUsingAttributeMustInheritFromIDisposableId = "SE1002";
         }
 
-        public class RelativeImport
+        public class RelativeImport // TVM1010+
         {
             public const string DoNotUseRelativeImportUsingStatementsId = "SE1010";
         }
 
-        public class RestrictedConstraint
+        public class RestrictedConstraint // TVM1020+
         {
             public const string UsedId = "SE1020";
             public const string MisusedOnAssemblyId = "SE1021";
             public const string MisusedOnGenericParameterId = "SE1022";
         }
 
-        public class ExhaustiveInitialization
+        public class ExhaustiveInitialization // TVM1030+
         {
             public const string TypeInitializationIsNonExhaustiveId = "SE1030";
             public const string PropertyIsMissingRequiredId = "SE1031";
@@ -37,6 +37,11 @@
 
             public const string BadPropertyPrefix = "BadProperty_";
             public const string BadParameterPrefix = "BadParameter_";
+        }
+
+        public class Obsolescence // TVM 1040+
+        {
+            public const string HideObsoleteElementsId = "SE1040";
         }
     }
 }
