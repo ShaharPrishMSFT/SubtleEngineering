@@ -11,6 +11,7 @@
     using Microsoft.CodeAnalysis.CSharp.Syntax;
     using Microsoft.CodeAnalysis.CodeFixes;
     using Microsoft.CodeAnalysis.CodeActions;
+    using Microsoft.CodeAnalysis.Formatting;
 
     [ExportCodeFixProvider(LanguageNames.CSharp, Name = nameof(CorrectObsolescenceCodeFix)), Shared]
     public class CorrectObsolescenceCodeFix : CodeFixProvider
@@ -97,19 +98,76 @@
 
         private SyntaxNode AddUsingDirectiveIfMissing(SyntaxNode root, string namespaceName)
         {
+            var editorBrowsableNamespace = SyntaxFactory.ParseName(namespaceName);
+
+            // Check for existing using directives at the compilation unit level
             if (root is CompilationUnitSyntax compilationUnit)
             {
                 var hasUsingDirective = compilationUnit.Usings.Any(u => u.Name.ToString() == namespaceName);
-                if (!hasUsingDirective)
+                if (hasUsingDirective)
                 {
-                    var usingDirective = SyntaxFactory.UsingDirective(SyntaxFactory.ParseName(namespaceName));
-                        //.WithTrailingTrivia(SyntaxFactory.CarriageReturnLineFeed);
-
-                    compilationUnit = compilationUnit.AddUsings(usingDirective);
-                    return compilationUnit;
+                    // The using directive already exists at the compilation unit level
+                    return root;
                 }
+
+                // Check if there are any existing using directives at the compilation unit level
+                if (compilationUnit.Usings.Any())
+                {
+                    // Add the using directive after the existing usings at the compilation unit level
+                    var newUsing = SyntaxFactory.UsingDirective(editorBrowsableNamespace);
+                    var newUsings = compilationUnit.Usings.Add(newUsing);
+                    var newCompilationUnit = compilationUnit.WithUsings(newUsings)
+                        .WithAdditionalAnnotations(Formatter.Annotation);
+
+                    return newCompilationUnit;
+                }
+
+                // No usings at the compilation unit level, check inside namespace declarations
+                var firstNamespace = compilationUnit.Members.OfType<NamespaceDeclarationSyntax>().FirstOrDefault();
+                if (firstNamespace != null)
+                {
+                    var newFirstNamespace = AddUsingToNamespace(firstNamespace, namespaceName);
+                    var newRoot = root.ReplaceNode(firstNamespace, newFirstNamespace);
+                    return newRoot;
+                }
+
+                // No namespaces, add using directive at the compilation unit level after any leading trivia (e.g., comments)
+                var leadingTrivia = compilationUnit.GetLeadingTrivia();
+                compilationUnit = compilationUnit.WithoutLeadingTrivia();
+
+                var newUsingWhenNoNamespace = SyntaxFactory.UsingDirective(editorBrowsableNamespace);
+                compilationUnit = compilationUnit.AddUsings(newUsingWhenNoNamespace)
+                                                 .WithAdditionalAnnotations(Formatter.Annotation);
+
+                return compilationUnit;
             }
+
             return root;
+        }
+
+        private NamespaceDeclarationSyntax AddUsingToNamespace(NamespaceDeclarationSyntax namespaceDeclaration, string namespaceName)
+        {
+            var editorBrowsableNamespace = SyntaxFactory.ParseName(namespaceName);
+
+            var hasUsingDirective = namespaceDeclaration.Usings.Any(u => u.Name.ToString() == namespaceName);
+            if (hasUsingDirective)
+            {
+                // The using directive already exists inside the namespace
+                return namespaceDeclaration;
+            }
+
+            // Create the new using directive
+            var newUsing = SyntaxFactory.UsingDirective(editorBrowsableNamespace);
+
+            // Add the new using directive to the namespace's using directives
+            // Place it after existing using directives, or at the top if there are none
+            var newUsings = namespaceDeclaration.Usings.Add(newUsing);
+
+            // Update the namespace declaration with the new usings
+            var newNamespaceDeclaration = namespaceDeclaration.WithUsings(newUsings)
+                .WithAdditionalAnnotations(Formatter.Annotation);
+
+            return newNamespaceDeclaration;
         }
 
         private SyntaxNode AddAttributeToDeclaration(SyntaxNode declarationNode, AttributeListSyntax attributeList)

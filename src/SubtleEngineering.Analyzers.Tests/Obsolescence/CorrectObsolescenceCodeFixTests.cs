@@ -37,8 +37,7 @@ public class CorrectObsolescenceCodeFixTests
                 {
                 }
             }
-            """
-        ;
+            """;
 
         var expectedDiagnostics = new List<DiagnosticResult>
         {
@@ -226,6 +225,155 @@ public class CorrectObsolescenceCodeFixTests
         };
 
         var sut = CreateSut(code, fixedCode, expectedDiagnostics);
+        await sut.RunAsync();
+    }
+
+    [Fact]
+    public async Task ObsoleteMethodWithoutEditorBrowsableDoesNotAddImport_ShouldAddAttribute()
+    {
+        const string code = """
+            using System;
+            using System.ComponentModel;
+                                    
+            class TestClass
+            {
+                [Obsolete]
+                public void {|#0:ObsoleteMethod|}()
+                {
+                }
+            }
+            """;
+
+        const string fixedCode = """
+            using System;
+            using System.ComponentModel;
+                                    
+            class TestClass
+            {
+                [Obsolete]
+                [EditorBrowsable(EditorBrowsableState.Never)]
+                public void ObsoleteMethod()
+                {
+                }
+            }
+            """;
+
+        var expectedDiagnostics = new List<DiagnosticResult>
+        {
+            VerifyCf.Diagnostic(CorrectObsolescenceAnalyzer.Rules[0])
+                .WithLocation(0)
+                .WithArguments("ObsoleteMethod")
+        };
+
+        var sut = CreateSut(code, fixedCode, expectedDiagnostics);
+
+        sut.CodeFixTestBehaviors = CodeFixTestBehaviors.SkipFixAllInDocumentCheck; // Ensures only the specific fix is applied
+        sut.TestBehaviors |= TestBehaviors.SkipSuppressionCheck; // If suppression is involved
+
+        await sut.RunAsync();
+    }
+
+    [Fact]
+    public async Task ObsoleteMethodWithoutEditorBrowsableButWithCommentOnTop_ShouldAddAttribute()
+    {
+        const string code = """
+            // This should stay the top comment.
+
+            namespace MyNamespace
+            {
+                using System;
+                        
+                class TestClass
+                {
+                    [Obsolete]
+                    public void {|#0:ObsoleteMethod|}()
+                    {
+                    }
+                }
+            }
+            """;
+
+        const string fixedCode = """
+            // This should stay the top comment.
+
+            namespace MyNamespace
+            {
+                using System;
+                using System.ComponentModel;
+
+                class TestClass
+                {
+                    [Obsolete]
+                    [EditorBrowsable(EditorBrowsableState.Never)]
+                    public void ObsoleteMethod()
+                    {
+                    }
+                }
+            }
+            """;
+
+        var expectedDiagnostics = new List<DiagnosticResult>
+        {
+            VerifyCf.Diagnostic(CorrectObsolescenceAnalyzer.Rules[0])
+                .WithLocation(0)
+                .WithArguments("ObsoleteMethod")
+        };
+
+        var sut = CreateSut(code, fixedCode, expectedDiagnostics);
+
+        sut.CodeFixTestBehaviors = CodeFixTestBehaviors.SkipFixAllInDocumentCheck; // Ensures only the specific fix is applied
+        sut.TestBehaviors |= TestBehaviors.SkipSuppressionCheck; // If suppression is involved
+
+        await sut.RunAsync();
+    }
+
+    [Fact]
+    public async Task ObsoleteMethodWithoutEditorBrowsableInsideANamespace_ShouldAddAttribute()
+    {
+        const string code = """
+            namespace MyNamespace
+            {
+                using System;
+                        
+                class TestClass
+                {
+                    [Obsolete]
+                    public void {|#0:ObsoleteMethod|}()
+                    {
+                    }
+                }
+            }
+            """;
+
+        const string fixedCode = """
+            namespace MyNamespace
+            {
+                using System;
+                using System.ComponentModel;
+
+                class TestClass
+                {
+                    [Obsolete]
+                    [EditorBrowsable(EditorBrowsableState.Never)]
+                    public void ObsoleteMethod()
+                    {
+                    }
+                }
+            }
+            """;
+
+        var expectedDiagnostics = new List<DiagnosticResult>
+        {
+            VerifyCf.Diagnostic(CorrectObsolescenceAnalyzer.Rules[0])
+                .WithLocation(0)
+                .WithArguments("ObsoleteMethod")
+        };
+
+        var sut = CreateSut(code, fixedCode, expectedDiagnostics);
+
+        sut.CodeFixTestBehaviors = CodeFixTestBehaviors.SkipFixAllInDocumentCheck; // Ensures only the specific fix is applied
+        sut.TestBehaviors |= TestBehaviors.SkipSuppressionCheck; // If suppression is involved
+
         await sut.RunAsync();
     }
 
