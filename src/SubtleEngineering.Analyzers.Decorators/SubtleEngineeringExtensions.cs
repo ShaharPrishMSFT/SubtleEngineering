@@ -1,6 +1,7 @@
 ﻿namespace SubtleEngineering.Analyzers.Decorators
 {
     using System;
+    using System.Threading.Tasks;
 
     public static class SubtleEngineeringExtensions
     {
@@ -17,5 +18,9 @@
             // No operation, serves as a marker for the analyzer.
             return disposable;
         }
+
+        public static TEnum Exhaustive<TEnum>(this TEnum t)
+            where TEnum : Enum
+            => t;
     }
 }
