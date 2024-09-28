@@ -82,16 +82,42 @@
             // Check if the result of 'Exhaustive' is used in a switch statement or expression.
             var parentOperation = invocation.Parent;
 
-            while (parentOperation != null &&
-                   parentOperation.Kind != OperationKind.Switch &&
-                   parentOperation.Kind != OperationKind.SwitchExpression)
+            // Flag to indicate if Exhaustive() is used in a switch.
+            bool isUsedInSwitch = false;
+
+            while (parentOperation != null)
             {
+                if (parentOperation.Kind == OperationKind.Tuple)
+                {
+                    // Report diagnostic SE1051 if 'Exhaustive' is used within a tuple.
+                    var diagnostic = Diagnostic.Create(Rules[SE1051], invocation.Syntax.GetLocation(), enumType.Name);
+                    context.ReportDiagnostic(diagnostic);
+                    return;
+                }
+                else if (parentOperation.Kind == OperationKind.Switch || parentOperation.Kind == OperationKind.SwitchExpression)
+                {
+                    // Check if the switch is directly using the result of 'Exhaustive()' invocation.
+                    if (IsOperationUsingExhaustiveValue(parentOperation, invocation))
+                    {
+                        isUsedInSwitch = true;
+                        break;
+                    }
+                    else
+                    {
+                        // If the switch is not directly using the 'Exhaustive()' result, and it's used within a tuple,
+                        // we consider it a misuse.
+                        var diagnostic = Diagnostic.Create(Rules[SE1051], invocation.Syntax.GetLocation(), enumType.Name);
+                        context.ReportDiagnostic(diagnostic);
+                        return;
+                    }
+                }
+
                 parentOperation = parentOperation.Parent;
             }
 
-            if (parentOperation == null)
+            if (!isUsedInSwitch)
             {
-                // Report diagnostic SE1051 if 'Exhaustive' is not used with a switch.
+                // Report diagnostic SE1051 if 'Exhaustive()' is not used with a switch.
                 var diagnostic = Diagnostic.Create(Rules[SE1051], invocation.Syntax.GetLocation(), enumType.Name);
                 context.ReportDiagnostic(diagnostic);
                 return;
@@ -189,6 +215,25 @@
                 var diagnostic = Diagnostic.Create(Rules[SE1050], invocation.Syntax.GetLocation(), enumType.Name, missing);
                 context.ReportDiagnostic(diagnostic);
             }
+        }
+
+        private bool IsOperationUsingExhaustiveValue(IOperation operation, IInvocationOperation exhaustiveInvocation)
+        {
+            if (operation == null)
+                return false;
+
+            if (operation == exhaustiveInvocation)
+                return true;
+
+            foreach (var child in operation.ChildOperations)
+            {
+                if (IsOperationUsingExhaustiveValue(child, exhaustiveInvocation))
+                {
+                    return true;
+                }
+            }
+
+            return false;
         }
 
         private void CollectConstantsFromPattern(IPatternOperation pattern, HashSet<object> matchedValues, ref bool hasDefaultLabel, ref bool containsUnsupportedPatterns)

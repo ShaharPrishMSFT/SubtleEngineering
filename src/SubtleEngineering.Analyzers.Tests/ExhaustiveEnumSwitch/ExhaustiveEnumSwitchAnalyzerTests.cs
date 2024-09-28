@@ -269,6 +269,44 @@ namespace SubtleEngineering.Analyzers.Tests.ExhaustiveEnumSwitch
         }
 
         [Fact]
+        public async Task ExhaustiveUsedInUnsupportedWayInTuple_Diagnostic()
+        {
+            const string code = """
+                using System;
+                using SubtleEngineering.Analyzers.Decorators;
+                enum MyEnum { A, B, C }
+                enum MyEnum2 { A, B, C }
+                
+                class TestClass
+                {
+                    void TestMethod()
+                    {
+                        var value = MyEnum.A;
+                        var value2 = MyEnum2.B;
+                        var result = (value.Exhaustive(), value2.Exhaustive()) switch
+                        {
+                            (MyEnum.A, MyEnum2.B) => 1,
+                            _ => 2,
+                        };
+
+                        Console.WriteLine(value);
+                    }
+                }
+                """;
+
+            DiagnosticResult[] expected = [
+                VerifyAn.Diagnostic(ExhaustiveEnumSwitchAnalyzer.Rules[1])
+                    .WithLocation(12, 23)
+                    .WithArguments("MyEnum"),
+                VerifyAn.Diagnostic(ExhaustiveEnumSwitchAnalyzer.Rules[1])
+                    .WithLocation(12, 43)
+                    .WithArguments("MyEnum2"),
+            ];
+            var sut = CreateSut(code, expected.ToList());
+            await sut.RunAsync();
+        }
+
+        [Fact]
         public async Task ExhaustiveNotUsed_NoDiagnostic()
         {
             const string code = """
