@@ -154,6 +154,35 @@ namespace SubtleEngineering.Analyzers.Tests.ExhaustiveEnumSwitch
         }
 
         [Fact]
+        public async Task SwitchExpression_MissingEnumValue_WithSameValueForSome_Diagnostic()
+        {
+            const string code = """
+                using SubtleEngineering.Analyzers.Decorators;
+                enum MyEnum { A = 1, B = 2, C = 2, D = 3, E = 4, F = 4 }
+
+                class TestClass
+                {
+                    int TestMethod()
+                    {
+                        var value = MyEnum.A;
+                        return value.Exhaustive() switch
+                        {
+                            MyEnum.A => 1,
+                            MyEnum.B => 2,
+                            _ => 0,
+                        };
+                    }
+                }
+                """;
+
+            var expected = VerifyAn.Diagnostic(ExhaustiveEnumSwitchAnalyzer.Rules[0])
+                .WithLocation(9, 16)
+                .WithArguments("MyEnum", "D, (E or F)");
+            var sut = CreateSut(code, new List<DiagnosticResult> { expected });
+            await sut.RunAsync();
+        }
+
+        [Fact]
         public async Task SwitchExpression_MissingEnumValueWhenUsingOr_Diagnostic()
         {
             const string code = """

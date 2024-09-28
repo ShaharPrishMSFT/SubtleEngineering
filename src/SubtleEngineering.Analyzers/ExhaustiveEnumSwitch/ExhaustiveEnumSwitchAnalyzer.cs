@@ -109,17 +109,23 @@
                 {
                     foreach (var clause in section.Clauses)
                     {
-                        if (clause is ISingleValueCaseClauseOperation singleValueClause)
+                        switch (clause)
                         {
-                            var constantValue = singleValueClause.Value.ConstantValue;
-                            if (constantValue.HasValue)
-                            {
-                                matchedValues.Add(constantValue.Value);
-                            }
-                        }
-                        else if (clause is IDefaultCaseClauseOperation)
-                        {
-                            hasDefaultLabel = true;
+                            case ISingleValueCaseClauseOperation singleValueClause:
+                                var constantValue = singleValueClause.Value.ConstantValue;
+                                if (constantValue.HasValue)
+                                {
+                                    matchedValues.Add(constantValue.Value);
+                                }
+                                break;
+
+                            case IPatternCaseClauseOperation patternClause:
+                                CollectConstantsFromPattern(patternClause.Pattern, matchedValues, ref hasDefaultLabel);
+                                break;
+
+                            case IDefaultCaseClauseOperation _:
+                                hasDefaultLabel = true;
+                                break;
                         }
                     }
                 }
@@ -130,28 +136,13 @@
                 foreach (var arm in switchExpressionOperation.Arms)
                 {
                     var pattern = arm.Pattern;
-
-                    if (pattern is IConstantPatternOperation constantPattern)
-                    {
-                        var constantValue = constantPattern.Value.ConstantValue;
-                        if (constantValue.HasValue)
-                        {
-                            matchedValues.Add(constantValue.Value);
-                        }
-                    }
-                    else if (pattern is IDeclarationPatternOperation)
-                    {
-                        // Handle declaration patterns if necessary.
-                    }
-                    else if (pattern is IDiscardPatternOperation)
-                    {
-                        hasDefaultLabel = true;
-                    }
+                    CollectConstantsFromPattern(pattern, matchedValues, ref hasDefaultLabel);
                 }
             }
 
             var dictionary = enumMembers.ToDictionary(x => x.Key, x => x.ToArray());
-            // Determine if any enum values are missing from the switch.
+
+            // Remove matched values.
             foreach (var matchedValue in matchedValues)
             {
                 dictionary.Remove(matchedValue);
@@ -160,11 +151,10 @@
             if (dictionary.Any() || !hasDefaultLabel)
             {
                 const string MissingDefault = "(default or _)";
-                var missingValuesGrouped  = dictionary
+                var missingValuesGrouped = dictionary
                     .Values
                     .OrderBy(x => x[0].Name)
                     .Select(x => x.Length == 1 ? x[0].Name : $"({string.Join(" or ", x.Select(f => f.Name))})");
-
 
                 if (!hasDefaultLabel)
                 {
@@ -176,6 +166,40 @@
                 // Report diagnostic SE1050 if not all enum values are covered.
                 var diagnostic = Diagnostic.Create(Rules[SE1050], invocation.Syntax.GetLocation(), enumType.Name, missing);
                 context.ReportDiagnostic(diagnostic);
+            }
+        }
+
+        private void CollectConstantsFromPattern(IPatternOperation pattern, HashSet<object> matchedValues, ref bool hasDefaultLabel)
+        {
+            if (pattern == null)
+                return;
+
+            switch (pattern)
+            {
+                case IConstantPatternOperation constantPattern:
+                    var constantValue = constantPattern.Value.ConstantValue;
+                    if (constantValue.HasValue)
+                    {
+                        matchedValues.Add(constantValue.Value);
+                    }
+                    break;
+
+                case IBinaryPatternOperation binaryPattern when binaryPattern.OperatorKind == BinaryOperatorKind.Or:
+                    CollectConstantsFromPattern(binaryPattern.LeftPattern, matchedValues, ref hasDefaultLabel);
+                    CollectConstantsFromPattern(binaryPattern.RightPattern, matchedValues, ref hasDefaultLabel);
+                    break;
+
+                case IDiscardPatternOperation _:
+                    hasDefaultLabel = true;
+                    break;
+
+                case IDeclarationPatternOperation _:
+                    // Handle declaration patterns if necessary.
+                    break;
+
+                default:
+                    // Handle other patterns if necessary.
+                    break;
             }
         }
     }
