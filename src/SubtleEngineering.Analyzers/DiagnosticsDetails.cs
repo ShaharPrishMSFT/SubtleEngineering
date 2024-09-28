@@ -48,6 +48,7 @@
         {
             public const string SwitchNeedsToCheckAllEnumValuesAndDefault = "SE1050";
             public const string ExhaustiveExtensionMayOnlyBeUsedWithSwitch = "SE1051";
+            public const string SwitchContainsUnsupportedPatterns = "SE1052";
 
         }
     }

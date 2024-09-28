@@ -4,19 +4,17 @@
     using System.Collections.Generic;
     using System.Collections.Immutable;
     using System.Linq;
-    using System.Text;
     using Microsoft.CodeAnalysis;
     using Microsoft.CodeAnalysis.CSharp.Syntax;
-    using Microsoft.CodeAnalysis.CSharp;
     using Microsoft.CodeAnalysis.Diagnostics;
     using Microsoft.CodeAnalysis.Operations;
-    using SubtleEngineering.Analyzers.Decorators;
 
     [DiagnosticAnalyzer(LanguageNames.CSharp)]
     public class ExhaustiveEnumSwitchAnalyzer : DiagnosticAnalyzer
     {
         private const int SE1050 = 0;
         private const int SE1051 = 1;
+        private const int SE1052 = 2;
 
         public static readonly ImmutableArray<DiagnosticDescriptor> Rules = ImmutableArray.Create(
             new DiagnosticDescriptor(
@@ -30,6 +28,13 @@
                 DiagnosticsDetails.ExhaustiveEnumSwitch.ExhaustiveExtensionMayOnlyBeUsedWithSwitch,
                 $"The Exhaustive() extension method is used incorrectly",
                 "The Exhaustive() call on the '{0}' enum may only be used when it's being tested with a switch statement or expression.",
+                "Usage",
+                DiagnosticSeverity.Warning,
+                isEnabledByDefault: true),
+            new DiagnosticDescriptor(
+                DiagnosticsDetails.ExhaustiveEnumSwitch.SwitchContainsUnsupportedPatterns,
+                "Switch contains unsupported patterns for exhaustive enum checking",
+                "Switch statement or expression contains patterns that cannot be exhaustively analyzed. Only constant patterns and 'or' patterns of constants are supported.",
                 "Usage",
                 DiagnosticSeverity.Warning,
                 isEnabledByDefault: true)
@@ -101,6 +106,7 @@
 
             var matchedValues = new HashSet<object>();
             bool hasDefaultLabel = false;
+            bool containsUnsupportedPatterns = false;
 
             if (parentOperation is ISwitchOperation switchOperation)
             {
@@ -117,14 +123,22 @@
                                 {
                                     matchedValues.Add(constantValue.Value);
                                 }
+                                else
+                                {
+                                    containsUnsupportedPatterns = true;
+                                }
                                 break;
 
                             case IPatternCaseClauseOperation patternClause:
-                                CollectConstantsFromPattern(patternClause.Pattern, matchedValues, ref hasDefaultLabel);
+                                CollectConstantsFromPattern(patternClause.Pattern, matchedValues, ref hasDefaultLabel, ref containsUnsupportedPatterns);
                                 break;
 
                             case IDefaultCaseClauseOperation _:
                                 hasDefaultLabel = true;
+                                break;
+
+                            default:
+                                containsUnsupportedPatterns = true;
                                 break;
                         }
                     }
@@ -136,8 +150,16 @@
                 foreach (var arm in switchExpressionOperation.Arms)
                 {
                     var pattern = arm.Pattern;
-                    CollectConstantsFromPattern(pattern, matchedValues, ref hasDefaultLabel);
+                    CollectConstantsFromPattern(pattern, matchedValues, ref hasDefaultLabel, ref containsUnsupportedPatterns);
                 }
+            }
+
+            if (containsUnsupportedPatterns)
+            {
+                // Report diagnostic SE1052 if unsupported patterns are found.
+                var diagnostic = Diagnostic.Create(Rules[SE1052], invocation.Syntax.GetLocation());
+                context.ReportDiagnostic(diagnostic);
+                return;
             }
 
             var dictionary = enumMembers.ToDictionary(x => x.Key, x => x.ToArray());
@@ -169,7 +191,7 @@
             }
         }
 
-        private void CollectConstantsFromPattern(IPatternOperation pattern, HashSet<object> matchedValues, ref bool hasDefaultLabel)
+        private void CollectConstantsFromPattern(IPatternOperation pattern, HashSet<object> matchedValues, ref bool hasDefaultLabel, ref bool containsUnsupportedPatterns)
         {
             if (pattern == null)
                 return;
@@ -182,23 +204,23 @@
                     {
                         matchedValues.Add(constantValue.Value);
                     }
+                    else
+                    {
+                        containsUnsupportedPatterns = true;
+                    }
                     break;
 
                 case IBinaryPatternOperation binaryPattern when binaryPattern.OperatorKind == BinaryOperatorKind.Or:
-                    CollectConstantsFromPattern(binaryPattern.LeftPattern, matchedValues, ref hasDefaultLabel);
-                    CollectConstantsFromPattern(binaryPattern.RightPattern, matchedValues, ref hasDefaultLabel);
+                    CollectConstantsFromPattern(binaryPattern.LeftPattern, matchedValues, ref hasDefaultLabel, ref containsUnsupportedPatterns);
+                    CollectConstantsFromPattern(binaryPattern.RightPattern, matchedValues, ref hasDefaultLabel, ref containsUnsupportedPatterns);
                     break;
 
                 case IDiscardPatternOperation _:
                     hasDefaultLabel = true;
                     break;
 
-                case IDeclarationPatternOperation _:
-                    // Handle declaration patterns if necessary.
-                    break;
-
                 default:
-                    // Handle other patterns if necessary.
+                    containsUnsupportedPatterns = true;
                     break;
             }
         }

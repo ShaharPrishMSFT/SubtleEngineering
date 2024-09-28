@@ -1,4 +1,6 @@
-﻿using Microsoft.CodeAnalysis;
+﻿using FluentAssertions.Equivalency;
+using Microsoft;
+using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.Testing;
 using SubtleEngineering.Analyzers.Decorators;
 using SubtleEngineering.Analyzers.ExhaustiveEnumSwitch;
@@ -312,6 +314,115 @@ namespace SubtleEngineering.Analyzers.Tests.ExhaustiveEnumSwitch
             var expected = VerifyAn.Diagnostic(ExhaustiveEnumSwitchAnalyzer.Rules[1])
                 .WithLocation(8, 13)
                 .WithArguments("MyEnum");
+            var sut = CreateSut(code, new List<DiagnosticResult> { expected });
+            await sut.RunAsync();
+        }
+
+        [Fact]
+        public async Task SwitchWithUnsupportedPattern_ShouldReportSE1052()
+        {
+            var code = """
+                using System;
+                using SubtleEngineering.Analyzers.Decorators;
+                
+                namespace TestNamespace
+                {
+                    enum MyEnum { Option1, Option2, Option3 }
+
+                    class TestClass
+                    {
+                        void TestMethod()
+                        {
+                            MyEnum value = MyEnum.Option1;
+                            switch (value.Exhaustive())
+                            {
+                                case MyEnum.Option1:
+                                    break;
+                                case MyEnum.Option2:
+                                    break;
+                                case var x when x > MyEnum.Option2:
+                                    break;
+                            }
+                        }
+                    }
+                }
+                """;
+
+            var expected = VerifyAn.Diagnostic(ExhaustiveEnumSwitchAnalyzer.Rules[2])
+                .WithLocation(13, 21) // Adjust the span to the location of Exhaustive() invocation
+            .WithArguments();
+
+            var sut = CreateSut(code, new List<DiagnosticResult> { expected });
+            await sut.RunAsync();
+        }
+
+        [Fact]
+        public async Task SwitchExpressionWithUnsupportedPattern_ShouldReportSE1052()
+        {
+            var code = """
+            using System;
+            using SubtleEngineering.Analyzers.Decorators;
+            
+            namespace TestNamespace
+            {
+                enum MyEnum { Option1, Option2, Option3 }
+
+                class TestClass
+                {
+                    int TestMethod()
+                    {
+                        MyEnum value = MyEnum.Option1;
+                        return value.Exhaustive() switch
+                        {
+                            MyEnum.Option1 => 1,
+                            MyEnum.Option2 => 2,
+                            var x when x > MyEnum.Option2 => 3,
+                        };
+                    }
+                }
+            }
+            """;
+
+            var expected = VerifyAn.Diagnostic(ExhaustiveEnumSwitchAnalyzer.Rules[2])
+                .WithLocation(13, 20) // Adjust the span to the location of Exhaustive() invocation
+            .WithArguments();
+
+            var sut = CreateSut(code, new List<DiagnosticResult> { expected });
+            await sut.RunAsync();
+        }
+
+        [Fact]
+        public async Task SwitchWithNegatedPattern_ShouldReportSE1052()
+        {
+            var code = """
+                using System;
+                using SubtleEngineering.Analyzers.Decorators;
+                
+                namespace TestNamespace
+                {
+                    enum MyEnum { Option1, Option2, Option3, Option4 }
+
+                    class TestClass
+                    {
+                        void TestMethod()
+                        {
+                            MyEnum value = MyEnum.Option1;
+                            switch (value.Exhaustive())
+                            {
+                                case MyEnum.Option1:
+                                    break;
+                                case not MyEnum.Option1:
+                                    break;
+                            }
+                        }
+                    }
+                }
+                """;
+
+            var expected = VerifyAn.Diagnostic(ExhaustiveEnumSwitchAnalyzer.Rules[2])
+                .WithLocation(13, 21) // Adjust the span to the location of Exhaustive() invocation
+                .WithArguments();
+
             var sut = CreateSut(code, new List<DiagnosticResult> { expected });
             await sut.RunAsync();
         }
