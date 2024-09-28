@@ -57,19 +57,7 @@
             var invocation = (IInvocationOperation)context.Operation;
 
             // Check if the method being called is the 'Exhaustive' extension method.
-            var methodSymbol = invocation.TargetMethod;
-
-            if (methodSymbol.Name != "Exhaustive" || !methodSymbol.IsExtensionMethod)
-            {
-                return;
-            }
-
-            // Ensure the method is the 'Exhaustive<T>' where T : Enum.
-            if (methodSymbol.TypeParameters.Length != 1 ||
-                !methodSymbol.TypeParameters[0].ConstraintTypes.Any(ct => ct.SpecialType == SpecialType.System_Enum))
-            {
-                return;
-            }
+            IsExhaustive(invocation);
 
             // Get the enum type being passed to the 'Exhaustive' method.
             var enumType = invocation.Arguments.FirstOrDefault()?.Value?.Type as INamedTypeSymbol;
@@ -215,6 +203,35 @@
                 var diagnostic = Diagnostic.Create(Rules[SE1050], invocation.Syntax.GetLocation(), enumType.Name, missing);
                 context.ReportDiagnostic(diagnostic);
             }
+        }
+
+        private static bool IsExhaustive(IInvocationOperation invocation)
+        {
+            var methodSymbol = invocation.TargetMethod;
+
+            if (methodSymbol.Name != "Exhaustive" || !methodSymbol.IsExtensionMethod)
+            {
+                return false;
+            }
+
+            // Ensure the containing type and namespace match the desired class.
+            var containingType = methodSymbol.ContainingType;
+            var containingNamespace = containingType.ContainingNamespace;
+
+            if (containingType.Name != "SubtleEngineeringExtensions" ||
+                containingNamespace.ToDisplayString() != "SubtleEngineering.Analyzers.Decorators")
+            {
+                return false;
+            }
+
+            // Ensure the method is the 'Exhaustive<T>' where T : Enum.
+            if (methodSymbol.TypeParameters.Length != 1 ||
+                !methodSymbol.TypeParameters[0].ConstraintTypes.Any(ct => ct.SpecialType == SpecialType.System_Enum))
+            {
+                return false;
+            }
+
+            return true;
         }
 
         private bool IsOperationUsingExhaustiveValue(IOperation operation, IInvocationOperation exhaustiveInvocation)
