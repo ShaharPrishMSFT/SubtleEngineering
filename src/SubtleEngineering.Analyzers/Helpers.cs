@@ -145,5 +145,32 @@
 
             return isMatchingName && (isMemberAccessWithThis || isDirectPropertyAccess);
         }
+
+        public static IEnumerable<TSource> DistinctBy<TSource, TKey>(
+            this IEnumerable<TSource> source,
+            Func<TSource, TKey> keySelector)
+        {
+            return source.Distinct(new DistinctByComparer<TSource, TKey>(keySelector));
+        }
+
+        private class DistinctByComparer<TSource, TKey> : IEqualityComparer<TSource>
+        {
+            private readonly Func<TSource, TKey> _keySelector;
+
+            public DistinctByComparer(Func<TSource, TKey> keySelector)
+            {
+                _keySelector = keySelector;
+            }
+
+            public bool Equals(TSource x, TSource y)
+            {
+                return EqualityComparer<TKey>.Default.Equals(_keySelector(x), _keySelector(y));
+            }
+
+            public int GetHashCode(TSource obj)
+            {
+                return _keySelector(obj)?.GetHashCode() ?? 0;
+            }
+        }
     }
 }
