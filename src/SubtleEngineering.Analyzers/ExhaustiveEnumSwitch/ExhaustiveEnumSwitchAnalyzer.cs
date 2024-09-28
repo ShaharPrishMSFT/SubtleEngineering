@@ -209,7 +209,7 @@
         {
             var methodSymbol = invocation.TargetMethod;
 
-            if (methodSymbol.Name != "Exhaustive" || !methodSymbol.IsExtensionMethod)
+            if (methodSymbol.Name != "ForceExhaustive" || !methodSymbol.IsExtensionMethod)
             {
                 return false;
             }

@@ -23,7 +23,7 @@ namespace SubtleEngineering.Analyzers.Tests.ExhaustiveEnumSwitch
                     void TestMethod()
                     {
                         var value = MyEnum.A;
-                        switch (value.Exhaustive())
+                        switch (value.ForceExhaustive())
                         {
                             case MyEnum.A:
                             case MyEnum.B:
@@ -51,7 +51,7 @@ namespace SubtleEngineering.Analyzers.Tests.ExhaustiveEnumSwitch
                     void TestMethod()
                     {
                         var value = MyEnum.A;
-                        switch (value.Exhaustive())
+                        switch (value.ForceExhaustive())
                         {
                             case MyEnum.A:
                             case MyEnum.B:
@@ -81,7 +81,7 @@ namespace SubtleEngineering.Analyzers.Tests.ExhaustiveEnumSwitch
                     void TestMethod()
                     {
                         var value = MyEnum.A;
-                        switch (value.Exhaustive())
+                        switch (value.ForceExhaustive())
                         {
                             case MyEnum.A:
                             case MyEnum.B:
@@ -111,7 +111,7 @@ namespace SubtleEngineering.Analyzers.Tests.ExhaustiveEnumSwitch
                     int TestMethod()
                     {
                         var value = MyEnum.A;
-                        return value.Exhaustive() switch
+                        return value.ForceExhaustive() switch
                         {
                             MyEnum.A => 1,
                             MyEnum.B => 2,
@@ -138,7 +138,7 @@ namespace SubtleEngineering.Analyzers.Tests.ExhaustiveEnumSwitch
                     int TestMethod()
                     {
                         var value = MyEnum.A;
-                        return value.Exhaustive() switch
+                        return value.ForceExhaustive() switch
                         {
                             MyEnum.A => 1,
                             MyEnum.B => 2,
@@ -167,7 +167,7 @@ namespace SubtleEngineering.Analyzers.Tests.ExhaustiveEnumSwitch
                     int TestMethod()
                     {
                         var value = MyEnum.A;
-                        return value.Exhaustive() switch
+                        return value.ForceExhaustive() switch
                         {
                             MyEnum.A => 1,
                             MyEnum.B => 2,
@@ -196,7 +196,7 @@ namespace SubtleEngineering.Analyzers.Tests.ExhaustiveEnumSwitch
                     int TestMethod()
                     {
                         var value = MyEnum.A;
-                        return value.Exhaustive() switch
+                        return value.ForceExhaustive() switch
                         {
                             MyEnum.A => 1,
                             MyEnum.B or MyEnum.D => 2,
@@ -225,7 +225,7 @@ namespace SubtleEngineering.Analyzers.Tests.ExhaustiveEnumSwitch
                     int TestMethod()
                     {
                         var value = MyEnum.A;
-                        return value.Exhaustive() switch
+                        return value.ForceExhaustive() switch
                         {
                             MyEnum.A => 1,
                             MyEnum.B => 2,
@@ -254,7 +254,7 @@ namespace SubtleEngineering.Analyzers.Tests.ExhaustiveEnumSwitch
                 {
                     void TestMethod()
                     {
-                        var value = MyEnum.A.Exhaustive();
+                        var value = MyEnum.A.ForceExhaustive();
                         // Not using value in a switch
                         Console.WriteLine(value);
                     }
@@ -283,7 +283,7 @@ namespace SubtleEngineering.Analyzers.Tests.ExhaustiveEnumSwitch
                     {
                         var value = MyEnum.A;
                         var value2 = MyEnum2.B;
-                        var result = (value.Exhaustive(), value2.Exhaustive()) switch
+                        var result = (value.ForceExhaustive(), value2.ForceExhaustive()) switch
                         {
                             (MyEnum.A, MyEnum2.B) => 1,
                             _ => 2,
@@ -299,7 +299,7 @@ namespace SubtleEngineering.Analyzers.Tests.ExhaustiveEnumSwitch
                     .WithLocation(12, 23)
                     .WithArguments("MyEnum"),
                 VerifyAn.Diagnostic(ExhaustiveEnumSwitchAnalyzer.Rules[1])
-                    .WithLocation(12, 43)
+                    .WithLocation(12, 48)
                     .WithArguments("MyEnum2"),
             ];
             var sut = CreateSut(code, expected.ToList());
@@ -341,7 +341,7 @@ namespace SubtleEngineering.Analyzers.Tests.ExhaustiveEnumSwitch
                 {
                     void TestMethod()
                     {
-                        if (MyEnum.A.Exhaustive() == MyEnum.B)
+                        if (MyEnum.A.ForceExhaustive() == MyEnum.B)
                         {
                             // Do something
                         }
@@ -372,7 +372,7 @@ namespace SubtleEngineering.Analyzers.Tests.ExhaustiveEnumSwitch
                         void TestMethod()
                         {
                             MyEnum value = MyEnum.Option1;
-                            switch (value.Exhaustive())
+                            switch (value.ForceExhaustive())
                             {
                                 case MyEnum.Option1:
                                     break;
@@ -410,7 +410,7 @@ namespace SubtleEngineering.Analyzers.Tests.ExhaustiveEnumSwitch
                     int TestMethod()
                     {
                         MyEnum value = MyEnum.Option1;
-                        return value.Exhaustive() switch
+                        return value.ForceExhaustive() switch
                         {
                             MyEnum.Option1 => 1,
                             MyEnum.Option2 => 2,
@@ -445,7 +445,7 @@ namespace SubtleEngineering.Analyzers.Tests.ExhaustiveEnumSwitch
                         void TestMethod()
                         {
                             MyEnum value = MyEnum.Option1;
-                            switch (value.Exhaustive())
+                            switch (value.ForceExhaustive())
                             {
                                 case MyEnum.Option1:
                                     break;

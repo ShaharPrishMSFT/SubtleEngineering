@@ -28,7 +28,7 @@ namespace SubtleEngineering.Analyzers.Tests.ExhaustiveEnumSwitch
                         void TestMethod()
                         {
                             var value = MyEnum.A;
-                            switch (value.Exhaustive())
+                            switch (value.ForceExhaustive())
                             {
                                 case MyEnum.A:
                                     break;
@@ -51,7 +51,7 @@ namespace SubtleEngineering.Analyzers.Tests.ExhaustiveEnumSwitch
                         void TestMethod()
                         {
                             var value = MyEnum.A;
-                            switch (value.Exhaustive())
+                            switch (value.ForceExhaustive())
                             {
                                 case MyEnum.A:
                                     break;
@@ -70,7 +70,7 @@ namespace SubtleEngineering.Analyzers.Tests.ExhaustiveEnumSwitch
             var expected = new List<DiagnosticResult>
             {
                 VerifyCf.Diagnostic(DiagnosticsDetails.ExhaustiveEnumSwitch.SwitchNeedsToCheckAllEnumValuesAndDefault)
-                    .WithSpan(13, 21, 13, 39) // Adjust the span to the location of Exhaustive() invocation
+                    .WithLocation(13, 21) // Adjust the span to the location of Exhaustive() invocation
                     .WithArguments("MyEnum", "B, C, (default or _)"),
             };
 
@@ -94,7 +94,7 @@ namespace SubtleEngineering.Analyzers.Tests.ExhaustiveEnumSwitch
                         void TestMethod()
                         {
                             var value = MyEnum.A;
-                            switch (value.Exhaustive())
+                            switch (value.ForceExhaustive())
                             {
                                 case MyEnum.A:
                                     break;
@@ -119,7 +119,7 @@ namespace SubtleEngineering.Analyzers.Tests.ExhaustiveEnumSwitch
                         void TestMethod()
                         {
                             var value = MyEnum.A;
-                            switch (value.Exhaustive())
+                            switch (value.ForceExhaustive())
                             {
                                 case MyEnum.A:
                                     break;
@@ -138,7 +138,7 @@ namespace SubtleEngineering.Analyzers.Tests.ExhaustiveEnumSwitch
             var expected = new List<DiagnosticResult>
             {
                 VerifyCf.Diagnostic(DiagnosticsDetails.ExhaustiveEnumSwitch.SwitchNeedsToCheckAllEnumValuesAndDefault)
-                    .WithSpan(13, 21, 13, 39) // Adjust the span to the location of Exhaustive() invocation
+                    .WithLocation(13, 21) // Adjust the span to the location of Exhaustive() invocation
                     .WithArguments("MyEnum", "(B or D or G), (C or E)"),
             };
 
@@ -162,7 +162,7 @@ namespace SubtleEngineering.Analyzers.Tests.ExhaustiveEnumSwitch
                         void TestMethod()
                         {
                             var value = MyEnum.A;
-                            switch (value.Exhaustive())
+                            switch (value.ForceExhaustive())
                             {
                                 case MyEnum.A:
                                     break;
@@ -185,7 +185,7 @@ namespace SubtleEngineering.Analyzers.Tests.ExhaustiveEnumSwitch
                         void TestMethod()
                         {
                             var value = MyEnum.A;
-                            switch (value.Exhaustive())
+                            switch (value.ForceExhaustive())
                             {
                                 case MyEnum.A:
                                     break;
@@ -204,7 +204,7 @@ namespace SubtleEngineering.Analyzers.Tests.ExhaustiveEnumSwitch
             var expected = new List<DiagnosticResult>
             {
                 VerifyCf.Diagnostic(DiagnosticsDetails.ExhaustiveEnumSwitch.SwitchNeedsToCheckAllEnumValuesAndDefault)
-                    .WithSpan(13, 21, 13, 39) // Adjust the span to the location of Exhaustive() invocation
+                    .WithLocation(13, 21) // Adjust the span to the location of Exhaustive() invocation
                     .WithArguments("MyEnum", "(B or D or G), (C or E), (default or _)"),
             };
 
@@ -228,7 +228,7 @@ namespace SubtleEngineering.Analyzers.Tests.ExhaustiveEnumSwitch
                         int TestMethod()
                         {
                             var value = MyEnum.A;
-                            return value.Exhaustive() switch
+                            return value.ForceExhaustive() switch
                             {
                                 MyEnum.A => 1,
                             };
@@ -250,7 +250,7 @@ namespace SubtleEngineering.Analyzers.Tests.ExhaustiveEnumSwitch
                         int TestMethod()
                         {
                             var value = MyEnum.A;
-                            return value.Exhaustive() switch
+                            return value.ForceExhaustive() switch
                             {
                                 MyEnum.A => 1,
                                 MyEnum.B => throw new NotImplementedException(),
@@ -265,7 +265,7 @@ namespace SubtleEngineering.Analyzers.Tests.ExhaustiveEnumSwitch
             var expected = new List<DiagnosticResult>
             {
                 VerifyCf.Diagnostic(DiagnosticsDetails.ExhaustiveEnumSwitch.SwitchNeedsToCheckAllEnumValuesAndDefault)
-                    .WithSpan(13, 20, 13, 38) // Adjust the span to the location of Exhaustive() invocation
+                    .WithLocation(13, 20) // Adjust the span to the location of Exhaustive() invocation
                     .WithArguments("MyEnum", "B, C, (default or _)"),
             };
 
@@ -289,7 +289,7 @@ namespace SubtleEngineering.Analyzers.Tests.ExhaustiveEnumSwitch
                         int TestMethod()
                         {
                             var value = MyEnum.A;
-                            return value.Exhaustive() switch
+                            return value.ForceExhaustive() switch
                             {
                                 MyEnum.A => 1,
                                 _ => 2
@@ -312,7 +312,7 @@ namespace SubtleEngineering.Analyzers.Tests.ExhaustiveEnumSwitch
                         int TestMethod()
                         {
                             var value = MyEnum.A;
-                            return value.Exhaustive() switch
+                            return value.ForceExhaustive() switch
                             {
                                 MyEnum.A => 1,
                                 MyEnum.B => throw new NotImplementedException(),
@@ -327,7 +327,7 @@ namespace SubtleEngineering.Analyzers.Tests.ExhaustiveEnumSwitch
             var expected = new List<DiagnosticResult>
             {
                 VerifyCf.Diagnostic(DiagnosticsDetails.ExhaustiveEnumSwitch.SwitchNeedsToCheckAllEnumValuesAndDefault)
-                    .WithSpan(13, 20, 13, 38) // Adjust the span to the location of Exhaustive() invocation
+                    .WithLocation(13, 20) // Adjust the span to the location of Exhaustive() invocation
                     .WithArguments("MyEnum", "(B or D or G), (C or E)"),
             };
 
@@ -351,7 +351,7 @@ namespace SubtleEngineering.Analyzers.Tests.ExhaustiveEnumSwitch
                         int TestMethod()
                         {
                             var value = MyEnum.A;
-                            return value.Exhaustive() switch
+                            return value.ForceExhaustive() switch
                             {
                                 MyEnum.A => 1,
                             };
@@ -373,7 +373,7 @@ namespace SubtleEngineering.Analyzers.Tests.ExhaustiveEnumSwitch
                         int TestMethod()
                         {
                             var value = MyEnum.A;
-                            return value.Exhaustive() switch
+                            return value.ForceExhaustive() switch
                             {
                                 MyEnum.A => 1,
                                 MyEnum.B => throw new NotImplementedException(),
@@ -388,7 +388,7 @@ namespace SubtleEngineering.Analyzers.Tests.ExhaustiveEnumSwitch
             var expected = new List<DiagnosticResult>
             {
                 VerifyCf.Diagnostic(DiagnosticsDetails.ExhaustiveEnumSwitch.SwitchNeedsToCheckAllEnumValuesAndDefault)
-                    .WithSpan(13, 20, 13, 38) // Adjust the span to the location of Exhaustive() invocation
+                    .WithLocation(13, 20) // Adjust the span to the location of Exhaustive() invocation
                     .WithArguments("MyEnum", "(B or D or G), (C or E), (default or _)"),
             };
 
@@ -412,7 +412,7 @@ namespace SubtleEngineering.Analyzers.Tests.ExhaustiveEnumSwitch
                         void TestMethod()
                         {
                             var value = MyEnum.A;
-                            switch (value.Exhaustive())
+                            switch (value.ForceExhaustive())
                             {
                                 case MyEnum.A:
                                     break;
@@ -437,7 +437,7 @@ namespace SubtleEngineering.Analyzers.Tests.ExhaustiveEnumSwitch
                         void TestMethod()
                         {
                             var value = MyEnum.A;
-                            switch (value.Exhaustive())
+                            switch (value.ForceExhaustive())
                             {
                                 case MyEnum.A:
                                     break;
@@ -454,7 +454,7 @@ namespace SubtleEngineering.Analyzers.Tests.ExhaustiveEnumSwitch
             var expected = new List<DiagnosticResult>
             {
                 VerifyCf.Diagnostic(DiagnosticsDetails.ExhaustiveEnumSwitch.SwitchNeedsToCheckAllEnumValuesAndDefault)
-                    .WithSpan(13, 21, 13, 39) // Adjust the span to the location of Exhaustive() invocation
+                    .WithLocation(13, 21) // Adjust the span to the location of Exhaustive() invocation
                     .WithArguments("MyEnum", "(default or _)"),
             };
 

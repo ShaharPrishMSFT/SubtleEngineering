@@ -19,7 +19,7 @@
             return disposable;
         }
 
-        public static TEnum Exhaustive<TEnum>(this TEnum t)
+        public static TEnum ForceExhaustive<TEnum>(this TEnum t)
             where TEnum : Enum
             => t;
     }
