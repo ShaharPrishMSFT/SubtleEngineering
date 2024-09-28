@@ -3,7 +3,7 @@ Set of analyzers for a better engineering experience.
 
 ## SubtleEngineering.Analyzers
 
-### Code Quality Analyzer: Require using statement/declaration modifier for classes
+### Code Quality Analyzer: Require using statement/declaration modifier for classes (SE1000, SE1001, SE1002)
 
 This analyzer checks if a class is decorated with the `RequireUsingAttribute` attribute and if it is it verifies that the class is instantiated within a using statement or using declaration.
 
@@ -65,7 +65,7 @@ public class Caller
 
 **How** it helps engineering: It ensures that methods marked with the RequireUsingAttribute return types that can be properly disposed of, helping to enforce best practices in resource management.
 
-###  Code Quality Analyzer: Avoid using relative namespaces in using directives
+###  Code Quality Analyzer: Avoid using relative namespaces in using directives (SE1010)
 
 This analyzer checks for using statements that import relative namespaces.
 
@@ -95,7 +95,7 @@ namespace MyNamesace.MySubNamespace2
 A code fix is available for SE1010 - changing the relative namespace into an absolute one.
 
 
-###  Code Quality Analyzer: Define and protect Exhaustive initialization types
+###  Code Quality Analyzer: Define and protect Exhaustive initialization types (SE103X)
 
 Applies to types decorated with the `ExhaustiveInitializationAttribute` attribute.
 
@@ -155,6 +155,11 @@ public class MyClass
 #### Code fix available
 A code fix is available for SE1030 and SE1031 - will add required to properties that are missing it.
 
+
+### Code quality: Hide obsolete members and elements from Intellisense (SE104X)
+
+When obsoleting members, it's often a good idea to hide it from intellisense so that developers have less of a chance of using it accidentlly.
+
 #### SE1040: ObsoleteELementsShouldBeHidden
 
 **What it looks for**: When an entity is marked with the [Obsolete] attribute, but not with the [EditorBrowsable(EditorBrowsableState.Never)] attribute
@@ -162,4 +167,61 @@ A code fix is available for SE1030 and SE1031 - will add required to properties 
 **Why**: When obsoleting an entity, it's preferable that developers stop seeing it in their intellisense. Note that if it needs to be visible, the developer may also decide to use other values of EditorBrowsableState.
 
 **How it helps engineering**: Less chance of deprecated elements being used in new code.
+
+### Code quality: Exhaustive switch statements/expressions (SE105X)
+
+When a developer wants to make sure they always check all possible values of an enum, then can mark the enum value as exhaustive - the analyzer will then make sure all known values are checked.
+
+Note: The `ForceExhaustive` method that is used for this, does nothing but return the enum value to the caller. It's just used to mark the requirement for the analyzer.
+
+```csharp
+public enum MyState
+{
+	Default,
+	Created = Default,
+	Started,
+	Running,
+	Completed,
+	Abandoned // Newly added enum value
+}
+
+public string? MetricName(MyState state)
+{
+	return state.ForceExhaustive() switch // This will give an SE1050 warning/error because MyState.Abandoned is missing here.
+	{
+		MyState.Created => "Created", // Created covers Default, so it does not need to be mentioned in the switch
+		MyState.Started => null,
+		MyState.Running => "Active",
+		MyState.Completed => "Done",
+		_ => throw InvalidOperationException($"Unrecognized enum value {state}")
+	}
+}
+```
+
+#### SE1050: Exhaustive check missing
+
+**What it looks for**: When a switch statement or expression is applied to a value of an enum, and that enum has been passed to the Extension method `ForceExhaustive`, the analyzer will go through the switch and make sure all possible enum values are inspected.
+
+**Why**: In some cases, a developer knows that all values of an enum need to be considered in certaina areas of the code. In such cases, the developer can mark the code with `ForceExhaustive` and if anyone adds an enum value later on, the code the developer wrote will get the warning/error. 
+
+**How it helps engineering**: It' harder to make mistakes as code evolves.
+
+#### SE1051: ForceExhaustive() may only be called on a value being switched on.
+
+This is to make sure developers don't accidetnally use this method in other places. 
+
+#### SE1052: Exhaustive switches only support certain patterns
+
+The only patterns supported right now by an exhaustive switch statement are normal matches and `or` matches:
+
+```csharp
+var x = e.ForceExhaustive() switch
+{
+	MyEnum.Value1 => // Allowed
+	MyEnum.Value1 or MyEnum.Value2 => // Allowed
+	// No other pattern is allowed:
+	MyEnum why => // Disallowed
+	MyEnum.Value1 and MyEnum.Value2 => // Disallowed and doesnt make sense.
+	etc...
+}
 
