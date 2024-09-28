@@ -104,7 +104,12 @@
                 // Find missing enum members.
                 var missingMembers = enumMembers.Where(em => !existingLabels.Contains(em.ConstantValue)).ToList();
 
-                if (!missingMembers.Any())
+                if (!hasDiscard)
+                {
+
+                }
+
+                if (!missingMembers.Any() && hasDiscard)
                     return document;
 
                 // Create new switch sections for missing enum members.
@@ -127,6 +132,21 @@
                     return section;
                 });
 
+                if (!hasDiscard)
+                {
+                    // Add the default case
+                    var defaultLabel = SyntaxFactory.DefaultSwitchLabel();
+                    var defaultThrowStatement = SyntaxFactory.ThrowStatement(
+                        SyntaxFactory.ObjectCreationExpression(
+                            SyntaxFactory.IdentifierName("InvalidOperationException"))
+                        .WithArgumentList(SyntaxFactory.ArgumentList()));
+
+                    var defaultSection = SyntaxFactory.SwitchSection(
+                        SyntaxFactory.List<SwitchLabelSyntax>(new[] { defaultLabel }),
+                        SyntaxFactory.List<StatementSyntax>(new[] { defaultThrowStatement }));
+
+                    newSections = newSections.Concat(new[] { defaultSection });
+                }
                 var updatedSwitch = switchStatement.AddSections(newSections.ToArray());
 
                 var newRoot = root.ReplaceNode(switchStatement, updatedSwitch);
@@ -157,10 +177,6 @@
                     CollectConstantsFromPattern(arm.Pattern, existingValues, semanticModel, cancellationToken, ref hasDiscard);
                 }
 
-                // If a discard pattern exists, we don't need to add missing cases.
-                if (hasDiscard)
-                    return document;
-
                 // Find missing enum members.
                 var missingMembers = enumMembers.Where(em => !existingValues.Contains(em.ConstantValue)).ToList();
 
@@ -184,6 +200,17 @@
 
                     return arm;
                 });
+
+                if (!hasDiscard)
+                {
+                    var defaultArm = SyntaxFactory.SwitchExpressionArm(
+                        SyntaxFactory.DiscardPattern(),
+                        SyntaxFactory.ThrowExpression(
+                            SyntaxFactory.ObjectCreationExpression(
+                                SyntaxFactory.IdentifierName("InvalidOperationException"))
+                            .WithArgumentList(SyntaxFactory.ArgumentList())));
+                    newArms = newArms.Concat(new[] { defaultArm });
+                }
 
                 var updatedSwitch = switchExpression.WithArms(switchExpression.Arms.AddRange(newArms));
 
