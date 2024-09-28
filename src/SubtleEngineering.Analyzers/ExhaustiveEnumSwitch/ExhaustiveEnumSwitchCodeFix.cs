@@ -45,7 +45,7 @@
             // Register a code action that will invoke the fix.
             context.RegisterCodeFix(
                 CodeAction.Create(
-                    title: "Add missing enum cases",
+                    title: "Make switch exhaustive",
                     createChangedDocument: c => AddMissingEnumCasesAsync(context.Document, switchNode, c),
                     equivalenceKey: "AddMissingEnumCases"),
                 diagnostic);
@@ -96,18 +96,17 @@
                         }
                         else if (label is DefaultSwitchLabelSyntax)
                         {
-                            // Do nothing; default case.
+                            hasDiscard = true;
                         }
                     }
                 }
 
                 // Find missing enum members.
-                var missingMembers = enumMembers.Where(em => !existingLabels.Contains(em.ConstantValue)).ToList();
-
-                if (!hasDiscard)
-                {
-
-                }
+                var missingMembers = enumMembers
+                    .Where(em => !existingLabels.Contains(em.ConstantValue))
+                    .OrderBy(x => x.Name)
+                    .DistinctBy(x => x.ConstantValue)
+                    .ToList();
 
                 if (!missingMembers.Any() && hasDiscard)
                     return document;
@@ -130,24 +129,45 @@
                         SyntaxFactory.List<StatementSyntax>(new[] { throwStatement }));
 
                     return section;
-                });
+                }).ToList();
 
-                if (!hasDiscard)
+                // Separate existing sections into those before and after the default section.
+                var sections = switchStatement.Sections;
+                var sectionsBeforeDefault = sections.TakeWhile(s => !s.Labels.Any(SyntaxKind.DefaultSwitchLabel)).ToList();
+                var defaultSection = sections.FirstOrDefault(s => s.Labels.Any(SyntaxKind.DefaultSwitchLabel));
+                var sectionsAfterDefault = sections.SkipWhile(s => !s.Labels.Any(SyntaxKind.DefaultSwitchLabel)).Skip(1).ToList();
+
+                // Insert the new sections before the default section if it exists.
+                if (defaultSection != null)
                 {
-                    // Add the default case
-                    var defaultLabel = SyntaxFactory.DefaultSwitchLabel();
-                    var defaultThrowStatement = SyntaxFactory.ThrowStatement(
-                        SyntaxFactory.ObjectCreationExpression(
-                            SyntaxFactory.IdentifierName("InvalidOperationException"))
-                        .WithArgumentList(SyntaxFactory.ArgumentList()));
-
-                    var defaultSection = SyntaxFactory.SwitchSection(
-                        SyntaxFactory.List<SwitchLabelSyntax>(new[] { defaultLabel }),
-                        SyntaxFactory.List<StatementSyntax>(new[] { defaultThrowStatement }));
-
-                    newSections = newSections.Concat(new[] { defaultSection });
+                    sectionsBeforeDefault.AddRange(newSections);
+                    sectionsBeforeDefault.Add(defaultSection);
+                    sectionsBeforeDefault.AddRange(sectionsAfterDefault);
                 }
-                var updatedSwitch = switchStatement.AddSections(newSections.ToArray());
+                else
+                {
+                    // If there's no default case and `hasDiscard` is false, add a default section.
+                    if (!hasDiscard)
+                    {
+                        var defaultLabel = SyntaxFactory.DefaultSwitchLabel();
+                        var defaultThrowStatement = SyntaxFactory.ThrowStatement(
+                            SyntaxFactory.ObjectCreationExpression(
+                                SyntaxFactory.IdentifierName("InvalidOperationException"))
+                            .WithArgumentList(SyntaxFactory.ArgumentList()));
+
+                        var defaultSectionToAdd = SyntaxFactory.SwitchSection(
+                            SyntaxFactory.List<SwitchLabelSyntax>(new[] { defaultLabel }),
+                            SyntaxFactory.List<StatementSyntax>(new[] { defaultThrowStatement }));
+
+                        newSections.Add(defaultSectionToAdd);
+                    }
+
+                    // Add the new sections.
+                    sectionsBeforeDefault.AddRange(newSections);
+                }
+
+                // Create the updated switch statement with the reordered sections.
+                var updatedSwitch = switchStatement.WithSections(SyntaxFactory.List(sectionsBeforeDefault));
 
                 var newRoot = root.ReplaceNode(switchStatement, updatedSwitch);
 
@@ -178,7 +198,11 @@
                 }
 
                 // Find missing enum members.
-                var missingMembers = enumMembers.Where(em => !existingValues.Contains(em.ConstantValue)).ToList();
+                var missingMembers = enumMembers
+                    .Where(em => !existingValues.Contains(em.ConstantValue))
+                    .OrderBy(x => x.Name)
+                    .DistinctBy(x => x.ConstantValue)
+                    .ToList();
 
                 if (!missingMembers.Any())
                     return document;
@@ -199,20 +223,42 @@
                     var arm = SyntaxFactory.SwitchExpressionArm(pattern, throwExpression);
 
                     return arm;
-                });
+                }).ToList();
 
-                if (!hasDiscard)
+                // Separate existing arms into those before and after the default (discard) arm.
+                var existingArms = switchExpression.Arms;
+                var armsBeforeDefault = existingArms.TakeWhile(a => !(a.Pattern is DiscardPatternSyntax)).ToList();
+                var defaultArm = existingArms.FirstOrDefault(a => a.Pattern is DiscardPatternSyntax);
+                var armsAfterDefault = existingArms.SkipWhile(a => !(a.Pattern is DiscardPatternSyntax)).Skip(1).ToList();
+
+                // Insert new arms before the default arm if it exists.
+                if (defaultArm != null)
                 {
-                    var defaultArm = SyntaxFactory.SwitchExpressionArm(
-                        SyntaxFactory.DiscardPattern(),
-                        SyntaxFactory.ThrowExpression(
-                            SyntaxFactory.ObjectCreationExpression(
-                                SyntaxFactory.IdentifierName("InvalidOperationException"))
-                            .WithArgumentList(SyntaxFactory.ArgumentList())));
-                    newArms = newArms.Concat(new[] { defaultArm });
+                    armsBeforeDefault.AddRange(newArms);
+                    armsBeforeDefault.Add(defaultArm);
+                    armsBeforeDefault.AddRange(armsAfterDefault);
+                }
+                else
+                {
+                    // If there's no default arm and `hasDiscard` is false, add a default arm.
+                    if (!hasDiscard)
+                    {
+                        var defaultArmToAdd = SyntaxFactory.SwitchExpressionArm(
+                            SyntaxFactory.DiscardPattern(),
+                            SyntaxFactory.ThrowExpression(
+                                SyntaxFactory.ObjectCreationExpression(
+                                    SyntaxFactory.IdentifierName("InvalidOperationException"))
+                                .WithArgumentList(SyntaxFactory.ArgumentList())));
+
+                        newArms.Add(defaultArmToAdd);
+                    }
+
+                    // Add the new arms.
+                    armsBeforeDefault.AddRange(newArms);
                 }
 
-                var updatedSwitch = switchExpression.WithArms(switchExpression.Arms.AddRange(newArms));
+                // Create the updated switch expression with the reordered arms.
+                var updatedSwitch = switchExpression.WithArms(SyntaxFactory.SeparatedList(armsBeforeDefault));
 
                 var newRoot = root.ReplaceNode(switchExpression, updatedSwitch);
 

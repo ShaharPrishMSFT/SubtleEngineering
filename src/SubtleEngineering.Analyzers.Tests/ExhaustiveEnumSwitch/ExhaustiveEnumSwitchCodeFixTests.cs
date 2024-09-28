@@ -10,7 +10,7 @@ using VerifyCf = SubtleEngineering.Analyzers.Tests.CSharpCodeFixVerifier<
 
 namespace SubtleEngineering.Analyzers.Tests.ExhaustiveEnumSwitch
 {
-    public class AddMissingEnumCasesCodeFixTests
+    public class ExhaustiveEnumSwitchCodeFixTests
     {
         [Fact]
         public async Task SwitchStatement_MissingEnumCases_ShouldAddCases()
@@ -79,6 +79,140 @@ namespace SubtleEngineering.Analyzers.Tests.ExhaustiveEnumSwitch
         }
 
         [Fact]
+        public async Task SwitchStatement_MissingEnumCases_ShouldAddCases_ButOnlyByValue()
+        {
+            const string code = """
+                using System;
+                using SubtleEngineering.Analyzers.Decorators;
+                
+                namespace TestNamespace
+                {
+                    enum MyEnum { A, B, C, D = B, E = C, F = 0, G = 1 }
+
+                    class TestClass
+                    {
+                        void TestMethod()
+                        {
+                            var value = MyEnum.A;
+                            switch (value.Exhaustive())
+                            {
+                                case MyEnum.A:
+                                    break;
+                                default:
+                                    break;
+                            }
+                        }
+                    }
+                }
+                """;
+
+            const string fixedCode = """
+                using System;
+                using SubtleEngineering.Analyzers.Decorators;
+                
+                namespace TestNamespace
+                {
+                    enum MyEnum { A, B, C, D = B, E = C, F = 0, G = 1 }
+                
+                    class TestClass
+                    {
+                        void TestMethod()
+                        {
+                            var value = MyEnum.A;
+                            switch (value.Exhaustive())
+                            {
+                                case MyEnum.A:
+                                    break;
+                                case MyEnum.B:
+                                    throw new NotImplementedException();
+                                case MyEnum.C:
+                                    throw new NotImplementedException();
+                                default:
+                                    break;
+                            }
+                        }
+                    }
+                }
+                """;
+
+            var expected = new List<DiagnosticResult>
+            {
+                VerifyCf.Diagnostic(DiagnosticsDetails.ExhaustiveEnumSwitch.SwitchNeedsToCheckAllEnumValuesAndDefault)
+                    .WithSpan(13, 21, 13, 39) // Adjust the span to the location of Exhaustive() invocation
+                    .WithArguments("MyEnum", "(B or D or G), (C or E)"),
+            };
+
+            var test = CreateTest(code, fixedCode, expected);
+            await test.RunAsync();
+        }
+
+        [Fact]
+        public async Task SwitchStatement_MissingEnumCases_ShouldAddCases_ButOnlyByValue_WithMissingDefault()
+        {
+            const string code = """
+                using System;
+                using SubtleEngineering.Analyzers.Decorators;
+                
+                namespace TestNamespace
+                {
+                    enum MyEnum { A, B, C, D = B, E = C, F = 0, G = 1 }
+
+                    class TestClass
+                    {
+                        void TestMethod()
+                        {
+                            var value = MyEnum.A;
+                            switch (value.Exhaustive())
+                            {
+                                case MyEnum.A:
+                                    break;
+                            }
+                        }
+                    }
+                }
+                """;
+
+            const string fixedCode = """
+                using System;
+                using SubtleEngineering.Analyzers.Decorators;
+                
+                namespace TestNamespace
+                {
+                    enum MyEnum { A, B, C, D = B, E = C, F = 0, G = 1 }
+                
+                    class TestClass
+                    {
+                        void TestMethod()
+                        {
+                            var value = MyEnum.A;
+                            switch (value.Exhaustive())
+                            {
+                                case MyEnum.A:
+                                    break;
+                                case MyEnum.B:
+                                    throw new NotImplementedException();
+                                case MyEnum.C:
+                                    throw new NotImplementedException();
+                                default:
+                                    throw new InvalidOperationException();
+                            }
+                        }
+                    }
+                }
+                """;
+
+            var expected = new List<DiagnosticResult>
+            {
+                VerifyCf.Diagnostic(DiagnosticsDetails.ExhaustiveEnumSwitch.SwitchNeedsToCheckAllEnumValuesAndDefault)
+                    .WithSpan(13, 21, 13, 39) // Adjust the span to the location of Exhaustive() invocation
+                    .WithArguments("MyEnum", "(B or D or G), (C or E), (default or _)"),
+            };
+
+            var test = CreateTest(code, fixedCode, expected);
+            await test.RunAsync();
+        }
+
+        [Fact]
         public async Task SwitchExpression_MissingEnumCases_ShouldAddCases()
         {
             const string code = """
@@ -133,6 +267,129 @@ namespace SubtleEngineering.Analyzers.Tests.ExhaustiveEnumSwitch
                 VerifyCf.Diagnostic(DiagnosticsDetails.ExhaustiveEnumSwitch.SwitchNeedsToCheckAllEnumValuesAndDefault)
                     .WithSpan(13, 20, 13, 38) // Adjust the span to the location of Exhaustive() invocation
                     .WithArguments("MyEnum", "B, C, (default or _)"),
+            };
+
+            var test = CreateTest(code, fixedCode, expected);
+            await test.RunAsync();
+        }
+
+        [Fact]
+        public async Task SwitchExpression_MissingEnumCases_ButMatchingValues_ShouldAddCases()
+        {
+            const string code = """
+                using System;
+                using SubtleEngineering.Analyzers.Decorators;
+                
+                namespace TestNamespace
+                {
+                    enum MyEnum { A, B, C, D = B, E = C, F = 0, G = 1 }
+                
+                    class TestClass
+                    {
+                        int TestMethod()
+                        {
+                            var value = MyEnum.A;
+                            return value.Exhaustive() switch
+                            {
+                                MyEnum.A => 1,
+                                _ => 2
+                            };
+                        }
+                    }
+                }
+                """;
+
+            const string fixedCode = """
+                using System;
+                using SubtleEngineering.Analyzers.Decorators;
+                
+                namespace TestNamespace
+                {
+                    enum MyEnum { A, B, C, D = B, E = C, F = 0, G = 1 }
+                
+                    class TestClass
+                    {
+                        int TestMethod()
+                        {
+                            var value = MyEnum.A;
+                            return value.Exhaustive() switch
+                            {
+                                MyEnum.A => 1,
+                                MyEnum.B => throw new NotImplementedException(),
+                                MyEnum.C => throw new NotImplementedException(),
+                                _ => 2
+                            };
+                        }
+                    }
+                }
+                """;
+
+            var expected = new List<DiagnosticResult>
+            {
+                VerifyCf.Diagnostic(DiagnosticsDetails.ExhaustiveEnumSwitch.SwitchNeedsToCheckAllEnumValuesAndDefault)
+                    .WithSpan(13, 20, 13, 38) // Adjust the span to the location of Exhaustive() invocation
+                    .WithArguments("MyEnum", "(B or D or G), (C or E)"),
+            };
+
+            var test = CreateTest(code, fixedCode, expected);
+            await test.RunAsync();
+        }
+
+        [Fact]
+        public async Task SwitchExpression_MissingEnumCases_ButMatchingValues_ShouldAddCases_MissingDefault()
+        {
+            const string code = """
+                using System;
+                using SubtleEngineering.Analyzers.Decorators;
+                
+                namespace TestNamespace
+                {
+                    enum MyEnum { A, B, C, D = B, E = C, F = 0, G = 1 }
+                
+                    class TestClass
+                    {
+                        int TestMethod()
+                        {
+                            var value = MyEnum.A;
+                            return value.Exhaustive() switch
+                            {
+                                MyEnum.A => 1,
+                            };
+                        }
+                    }
+                }
+                """;
+
+            const string fixedCode = """
+                using System;
+                using SubtleEngineering.Analyzers.Decorators;
+                
+                namespace TestNamespace
+                {
+                    enum MyEnum { A, B, C, D = B, E = C, F = 0, G = 1 }
+                
+                    class TestClass
+                    {
+                        int TestMethod()
+                        {
+                            var value = MyEnum.A;
+                            return value.Exhaustive() switch
+                            {
+                                MyEnum.A => 1,
+                                MyEnum.B => throw new NotImplementedException(),
+                                MyEnum.C => throw new NotImplementedException(),
+                                _ => throw new InvalidOperationException()
+                            };
+                        }
+                    }
+                }
+                """;
+
+            var expected = new List<DiagnosticResult>
+            {
+                VerifyCf.Diagnostic(DiagnosticsDetails.ExhaustiveEnumSwitch.SwitchNeedsToCheckAllEnumValuesAndDefault)
+                    .WithSpan(13, 20, 13, 38) // Adjust the span to the location of Exhaustive() invocation
+                    .WithArguments("MyEnum", "(B or D or G), (C or E), (default or _)"),
             };
 
             var test = CreateTest(code, fixedCode, expected);
