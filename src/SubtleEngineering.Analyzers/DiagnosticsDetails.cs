@@ -42,6 +42,9 @@
         public class Obsolescence // TVM 1040+
         {
             public const string HideObsoleteElementsId = "SE1040";
+
+            public const string HideEquivalenceKey = "AddHideEditorBrowsableAttribute";
+            public const string KeepEquivalenceKey = "AddKeepEditorBrowsableAttribute";
         }
 
         public class ExhaustiveEnumSwitch

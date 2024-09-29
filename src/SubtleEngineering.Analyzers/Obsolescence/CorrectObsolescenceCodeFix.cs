@@ -55,12 +55,18 @@
             context.RegisterCodeFix(
                 CodeAction.Create(
                     title: "Hide obsolete element from IntelliSense",
-                    createChangedDocument: c => AddEditorBrowsableAttributeAsync(context.Document, declarationNode, c),
-                    equivalenceKey: "AddEditorBrowsableAttribute"),
+                    createChangedDocument: c => AddEditorBrowsableAttributeAsync(context.Document, declarationNode, c, true),
+                    equivalenceKey: DiagnosticsDetails.Obsolescence.HideEquivalenceKey),
+                diagnostic);
+            context.RegisterCodeFix(
+                CodeAction.Create(
+                    title: "Keep obsolete element visible for IntelliSense",
+                    createChangedDocument: c => AddEditorBrowsableAttributeAsync(context.Document, declarationNode, c, false),
+                    equivalenceKey: DiagnosticsDetails.Obsolescence.KeepEquivalenceKey),
                 diagnostic);
         }
 
-        private async Task<Document> AddEditorBrowsableAttributeAsync(Document document, SyntaxNode declarationNode, CancellationToken cancellationToken)
+        private async Task<Document> AddEditorBrowsableAttributeAsync(Document document, SyntaxNode declarationNode, CancellationToken cancellationToken, bool hide)
         {
             var root = await document.GetSyntaxRootAsync(cancellationToken).ConfigureAwait(false);
 
@@ -82,7 +88,7 @@
                             SyntaxFactory.MemberAccessExpression(
                                 SyntaxKind.SimpleMemberAccessExpression,
                                 SyntaxFactory.IdentifierName("EditorBrowsableState"),
-                                SyntaxFactory.IdentifierName("Never"))))));
+                                SyntaxFactory.IdentifierName(hide ? "Never" : "Always"))))));
 
             var newAttributeList = SyntaxFactory.AttributeList(SyntaxFactory.SingletonSeparatedList(editorBrowsableAttribute));
 
