@@ -10,9 +10,12 @@ using VerifyCf = CSharpCodeFixVerifier<Analyzers.Obsolescence.CorrectObsolescenc
 
 public class CorrectObsolescenceCodeFixTests
 {
-    [Fact]
-    public async Task ObsoleteMethodWithoutEditorBrowsable_ShouldAddAttribute()
+    [Theory]
+    [InlineData(true)]
+    [InlineData(false)]
+    public async Task ObsoleteMethodWithoutEditorBrowsable_ShouldAddAttribute(bool hide)
     {
+        string expectedBrowsable = hide ? "Never" : "Always";
         const string code = """
             using System;
             
@@ -25,14 +28,14 @@ public class CorrectObsolescenceCodeFixTests
             }
             """;
 
-        const string fixedCode = """
+        string fixedCode = $$"""
             using System;
             using System.ComponentModel;
 
             class TestClass
             {
                 [Obsolete]
-                [EditorBrowsable(EditorBrowsableState.Never)]
+                [EditorBrowsable(EditorBrowsableState.{{expectedBrowsable}})]
                 public void ObsoleteMethod()
                 {
                 }
@@ -46,10 +49,10 @@ public class CorrectObsolescenceCodeFixTests
                 .WithArguments("ObsoleteMethod")
         };
 
-        var sut = CreateSut(code, fixedCode, expectedDiagnostics);
+        var sut = CreateSut(code, fixedCode, expectedDiagnostics, hide ? DiagnosticsDetails.Obsolescence.HideEquivalenceKey: DiagnosticsDetails.Obsolescence.KeepEquivalenceKey);
 
-        sut.CodeFixTestBehaviors = CodeFixTestBehaviors.SkipFixAllInDocumentCheck; // Ensures only the specific fix is applied
-        sut.TestBehaviors |= TestBehaviors.SkipSuppressionCheck; // If suppression is involved
+        //sut.CodeFixTestBehaviors = CodeFixTestBehaviors.SkipFixAllInDocumentCheck; // Ensures only the specific fix is applied
+        //sut.TestBehaviors |= TestBehaviors.SkipSuppressionCheck; // If suppression is involved
 
         await sut.RunAsync();
     }
@@ -377,7 +380,7 @@ public class CorrectObsolescenceCodeFixTests
         await sut.RunAsync();
     }
 
-    private VerifyCf.Test CreateSut(string code, string fixedCode, List<DiagnosticResult> expected)
+    private VerifyCf.Test CreateSut(string code, string fixedCode, List<DiagnosticResult> expected, string equivalencyKey = DiagnosticsDetails.Obsolescence.HideEquivalenceKey)
     {
         var test = new VerifyCf.Test
         {
@@ -392,6 +395,7 @@ public class CorrectObsolescenceCodeFixTests
                     //MetadataReference.CreateFromFile(typeof(System.ComponentModel.EditorBrowsableAttribute).Assembly.Location),
                 },
             },
+            CodeActionEquivalenceKey = equivalencyKey, 
         };
 
         test.ExpectedDiagnostics.AddRange(expected);
