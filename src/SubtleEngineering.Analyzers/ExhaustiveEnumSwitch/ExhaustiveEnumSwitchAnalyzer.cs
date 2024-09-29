@@ -57,7 +57,10 @@
             var invocation = (IInvocationOperation)context.Operation;
 
             // Check if the method being called is the 'Exhaustive' extension method.
-            IsExhaustive(invocation);
+            if (!IsExhaustive(invocation))
+            {
+                return;
+            }
 
             // Get the enum type being passed to the 'Exhaustive' method.
             var enumType = invocation.Arguments.FirstOrDefault()?.Value?.Type as INamedTypeSymbol;

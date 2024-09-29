@@ -11,6 +11,35 @@ namespace SubtleEngineering.Analyzers.Tests.ExhaustiveEnumSwitch
     public class ExhaustiveEnumSwitchAnalyzerTests
     {
         [Fact]
+        public async Task NormalSwitchDoesNothing()
+        {
+            const string code = """
+                using SubtleEngineering.Analyzers.Decorators;
+                enum MyEnum { A, B, C }
+                
+                class TestClass
+                {
+                    void TestMethod()
+                    {
+                        var obj = new object();
+                        var x = obj switch
+                        {
+                            int v => MyInvocation(MyEnum.A),
+                            double v => MyInvocation(MyEnum.B),
+                            float v => MyInvocation(MyEnum.C),
+                            _ => (object)null,
+                        };
+                    }
+
+                    public static object MyInvocation<T>(T o) => o;
+                }
+                """;
+
+            var sut = CreateSut(code, new List<DiagnosticResult>());
+            await sut.RunAsync();
+        }
+
+        [Fact]
         public async Task SwitchStatement_AllEnumValuesCovered_NoDiagnostic()
         {
             const string code = """
