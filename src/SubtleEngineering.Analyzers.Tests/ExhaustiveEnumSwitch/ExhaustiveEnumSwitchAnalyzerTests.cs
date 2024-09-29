@@ -40,6 +40,222 @@ namespace SubtleEngineering.Analyzers.Tests.ExhaustiveEnumSwitch
         }
 
         [Fact]
+        public async Task NestedSwitchWorks()
+        {
+            const string code = """
+                using SubtleEngineering.Analyzers.Decorators;
+                enum MyEnum { A, B }
+                enum MyEnum2 { C, D }
+                                
+                class TestClass
+                {
+                    void TestMethod()
+                    {
+                        var e = MyEnum.A;
+                        var e2 = MyEnum2.C;
+                        var x = e.ForceExhaustive() switch
+                        {
+                            MyEnum.A => 1,
+                            MyEnum.B => e2.ForceExhaustive() switch
+                                {
+                                    MyEnum2.C => 3,
+                                    MyEnum2.D => 4,
+                                    _ => 0,
+                                },
+                            _ => (object)null,
+                        };
+                    }
+
+                    public static object MyInvocation<T>(T o) => o;
+                }
+                """;
+
+            var sut = CreateSut(code, new List<DiagnosticResult>());
+            await sut.RunAsync();
+        }
+
+        [Fact]
+        public async Task NestedSwitchWhereTopHasForceAndMissingValuesWorks()
+        {
+            const string code = """
+                using SubtleEngineering.Analyzers.Decorators;
+                enum MyEnum { A, B }
+                enum MyEnum2 { C, D }
+                                
+                class TestClass
+                {
+                    void TestMethod()
+                    {
+                        var e = MyEnum.A;
+                        var e2 = MyEnum2.C;
+                        var x = e.ForceExhaustive() switch
+                        {
+                            MyEnum.A => 1,
+                            MyEnum.B => e2 switch
+                                {
+                                    MyEnum2.C => 3,
+                                    MyEnum2.D => 4,
+                                    _ => 0,
+                                },
+                            _ => (object)null,
+                        };
+                    }
+
+                    public static object MyInvocation<T>(T o) => o;
+                }
+                """;
+
+            var sut = CreateSut(code, new List<DiagnosticResult>());
+            await sut.RunAsync();
+        }
+
+        [Fact]
+        public async Task NestedSwitchWhereInnerHasForceWorks()
+        {
+            const string code = """
+                using SubtleEngineering.Analyzers.Decorators;
+                enum MyEnum { A, B }
+                enum MyEnum2 { C, D }
+                                
+                class TestClass
+                {
+                    void TestMethod()
+                    {
+                        var e = MyEnum.A;
+                        var e2 = MyEnum2.C;
+                        var x = e switch
+                        {
+                            MyEnum.A => 1,
+                            MyEnum.B => e2.ForceExhaustive() switch
+                                {
+                                    MyEnum2.C => 3,
+                                    MyEnum2.D => 4,
+                                    _ => 0,
+                                },
+                            _ => (object)null,
+                        };
+                    }
+
+                    public static object MyInvocation<T>(T o) => o;
+                }
+                """;
+
+            var sut = CreateSut(code, new List<DiagnosticResult>());
+            await sut.RunAsync();
+        }
+
+        [Fact]
+        public async Task NestedSwitchWhereTopHasForceWorks()
+        {
+            const string code = """
+                using SubtleEngineering.Analyzers.Decorators;
+                enum MyEnum { A, B }
+                enum MyEnum2 { C, D }
+                                
+                class TestClass
+                {
+                    void TestMethod()
+                    {
+                        var e = MyEnum.A;
+                        var e2 = MyEnum2.C;
+                        var x = e.ForceExhaustive() switch
+                        {
+                            MyEnum.A => 1,
+                            MyEnum.B => e2 switch
+                                {
+                                    MyEnum2.C => 3,
+                                    MyEnum2.D => 4,
+                                    _ => 0,
+                                },
+                            _ => (object)null,
+                        };
+                    }
+
+                    public static object MyInvocation<T>(T o) => o;
+                }
+                """;
+
+            var sut = CreateSut(code, new List<DiagnosticResult>());
+            await sut.RunAsync();
+        }
+
+        [Fact]
+        public async Task NestedSwitchWhereInnerHasForceAndMissingWorks()
+        {
+            const string code = """
+                using SubtleEngineering.Analyzers.Decorators;
+                enum MyEnum { A, B }
+                enum MyEnum2 { C, D }
+                                
+                class TestClass
+                {
+                    void TestMethod()
+                    {
+                        var e = MyEnum.A;
+                        var e2 = MyEnum2.C;
+                        var x = e switch
+                        {
+                            MyEnum.A => 1,
+                            MyEnum.B => e2.ForceExhaustive() switch
+                                {
+                                    MyEnum2.C => 3,
+                                    _ => 0,
+                                },
+                            _ => (object)null,
+                        };
+                    }
+
+                    public static object MyInvocation<T>(T o) => o;
+                }
+                """;
+
+            var expected = VerifyAn.Diagnostic(ExhaustiveEnumSwitchAnalyzer.Rules[0])
+                .WithLocation(14, 25)
+                .WithArguments("MyEnum2", "D");
+
+            var sut = CreateSut(code, new List<DiagnosticResult>() { expected });
+            await sut.RunAsync();
+        }
+
+        [Fact]
+        public async Task NestedSwitchWhereOuterHasForceAndMissingWorks()
+        {
+            const string code = """
+                using SubtleEngineering.Analyzers.Decorators;
+                enum MyEnum { A, B }
+                enum MyEnum2 { C, D }
+                                
+                class TestClass
+                {
+                    void TestMethod()
+                    {
+                        var e = MyEnum.A;
+                        var e2 = MyEnum2.C;
+                        var x = e.ForceExhaustive() switch
+                        {
+                            MyEnum.B => e2 switch
+                                {
+                                    MyEnum2.C => 3,
+                                    MyEnum2.D => 4,
+                                    _ => 0,
+                                },
+                            _ => (object)null,
+                        };
+                    }
+
+                    public static object MyInvocation<T>(T o) => o;
+                }
+                """;
+
+            var expected = VerifyAn.Diagnostic(ExhaustiveEnumSwitchAnalyzer.Rules[0])
+                .WithLocation(11, 17)
+                .WithArguments("MyEnum", "A");
+
+            var sut = CreateSut(code, new List<DiagnosticResult>() { expected });
+            await sut.RunAsync();
+        }
+
+        [Fact]
         public async Task SwitchStatement_AllEnumValuesCovered_NoDiagnostic()
         {
             const string code = """
