@@ -4,6 +4,7 @@
         <TargetFramework>netstandard2.0</TargetFramework>
         <EnforceExtendedAnalyzerRules>true</EnforceExtendedAnalyzerRules>
         <PackageVersion>$(AnalyzersVersion)</PackageVersion>
+        <LangVersion>8</LangVersion>
     </PropertyGroup>
     <PropertyGroup Label="Package Info">
         <Title>SubtleEngineering.Analyzers</Title>
