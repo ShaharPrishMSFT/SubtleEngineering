@@ -6,6 +6,7 @@ using SubtleEngineering.Analyzers;
 using System.Collections.Immutable;
 using Microsoft.CodeAnalysis.Operations;
 using System.Linq;
+using System;
 
 [DiagnosticAnalyzer(LanguageNames.CSharp)]
 public class UseStaticLambdaOrMethodAnalyzer : DiagnosticAnalyzer
@@ -15,14 +16,14 @@ public class UseStaticLambdaOrMethodAnalyzer : DiagnosticAnalyzer
 
     public static readonly ImmutableArray<DiagnosticDescriptor> Rules = ImmutableArray.Create(
         new DiagnosticDescriptor(
-            DiagnosticsDetails.UseStaticLambdaOrMethod.UseStaticNoReasoning,
+            "SE1060",
             "Property, field or parameter should use a static lambda or method",
             "The member '{0}' should be assigned a static lambda or method.",
             "Usage",
             DiagnosticSeverity.Warning,
             isEnabledByDefault: true),
         new DiagnosticDescriptor(
-            DiagnosticsDetails.UseStaticLambdaOrMethod.UseStaticWithReason,
+            "SE1061",
             "Property, field or parameter should use a static lambda or method",
             "The member '{0}' should be assigned a static lambda or method. Reason: {1}",
             "Usage",
@@ -40,6 +41,12 @@ public class UseStaticLambdaOrMethodAnalyzer : DiagnosticAnalyzer
 
         // Register actions to analyze assignments and initializations
         context.RegisterOperationAction(AnalyzeAssignmentOrInitializer, OperationKind.SimpleAssignment, OperationKind.VariableInitializer, OperationKind.ParameterInitializer);
+
+        // Register action to analyze property declarations with initializers
+        context.RegisterSyntaxNodeAction(AnalyzePropertyDeclaration, SyntaxKind.PropertyDeclaration);
+
+        // Register action to analyze method invocations
+        context.RegisterOperationAction(AnalyzeInvocation, OperationKind.Invocation);
     }
 
     private void AnalyzeAssignmentOrInitializer(OperationAnalysisContext context)
@@ -78,7 +85,57 @@ public class UseStaticLambdaOrMethodAnalyzer : DiagnosticAnalyzer
             return;
 
         // Analyze the value being assigned
-        AnalyzeValueOperation(context, valueOperation, targetSymbol);
+        AnalyzeValueOperation(context.ReportDiagnostic, valueOperation, targetSymbol);
+    }
+
+    private void AnalyzePropertyDeclaration(SyntaxNodeAnalysisContext context)
+    {
+        var propertyDeclaration = (PropertyDeclarationSyntax)context.Node;
+
+        // Check if the property has an initializer
+        var initializer = propertyDeclaration.Initializer;
+        if (initializer == null)
+            return;
+
+        // Get the symbol for the property
+        var propertySymbol = context.SemanticModel.GetDeclaredSymbol(propertyDeclaration);
+        if (propertySymbol == null)
+            return;
+
+        // Check if the property has the UseStaticLambdaAttribute
+        if (!HasUseStaticLambdaAttribute(propertySymbol))
+            return;
+
+        // Get the operation for the initializer value
+        var valueOperation = context.SemanticModel.GetOperation(initializer.Value, context.CancellationToken);
+        if (valueOperation == null)
+            return;
+
+        // Create an OperationAnalysisContext to pass to AnalyzeValueOperation
+        AnalyzeValueOperation(context.ReportDiagnostic, valueOperation, propertySymbol);
+    }
+
+    private void AnalyzeInvocation(OperationAnalysisContext context)
+    {
+        var invocation = (IInvocationOperation)context.Operation;
+
+        foreach (var argument in invocation.Arguments)
+        {
+            var parameter = argument.Parameter;
+            if (parameter == null)
+                continue;
+
+            // Check if the parameter has the UseStaticLambdaAttribute
+            if (!HasUseStaticLambdaAttribute(parameter))
+                continue;
+
+            var valueOperation = argument.Value;
+            if (valueOperation == null)
+                continue;
+
+            // Analyze the argument value
+            AnalyzeValueOperation(context.ReportDiagnostic, valueOperation, parameter);
+        }
     }
 
     private ISymbol GetTargetSymbol(IOperation target)
@@ -89,37 +146,44 @@ public class UseStaticLambdaOrMethodAnalyzer : DiagnosticAnalyzer
             IPropertyReferenceOperation propRef => propRef.Property,
             ILocalReferenceOperation localRef => localRef.Local,
             IParameterReferenceOperation paramRef => paramRef.Parameter,
+            IVariableDeclaratorOperation varDecl => varDecl.Symbol,
             _ => null
         };
     }
 
-    private void AnalyzeValueOperation(OperationAnalysisContext context, IOperation valueOperation, ISymbol targetSymbol)
+    private void AnalyzeValueOperation(Action<Diagnostic> report, IOperation valueOperation, ISymbol targetSymbol)
     {
         switch (valueOperation)
         {
             case IAnonymousFunctionOperation anonymousFunction:
                 if (!anonymousFunction.Symbol.IsStatic)
-                    ReportDiagnostic(context, targetSymbol, valueOperation.Syntax.GetLocation());
+                    ReportDiagnostic(report, targetSymbol, valueOperation.Syntax.GetLocation());
                 break;
 
             case IDelegateCreationOperation delegateCreation:
-                AnalyzeValueOperation(context, delegateCreation.Target, targetSymbol);
+                AnalyzeValueOperation(report, delegateCreation.Target, targetSymbol);
                 break;
 
             case IMethodReferenceOperation methodReference:
                 if (!methodReference.Method.IsStatic)
-                    ReportDiagnostic(context, targetSymbol, valueOperation.Syntax.GetLocation());
+                    ReportDiagnostic(report, targetSymbol, valueOperation.Syntax.GetLocation());
                 break;
 
             case IParenthesizedOperation parenthesizedOperation:
-                AnalyzeValueOperation(context, parenthesizedOperation.Operand, targetSymbol);
+                AnalyzeValueOperation(report, parenthesizedOperation.Operand, targetSymbol);
                 break;
 
             case IConversionOperation conversionOperation:
-                AnalyzeValueOperation(context, conversionOperation.Operand, targetSymbol);
+                AnalyzeValueOperation(report, conversionOperation.Operand, targetSymbol);
                 break;
 
+            case ILiteralOperation literalOperation:
+                // Ignore null literals
+                break;
+
+            default:
                 // Handle other cases if necessary
+                break;
         }
     }
 
@@ -128,9 +192,9 @@ public class UseStaticLambdaOrMethodAnalyzer : DiagnosticAnalyzer
         return symbol.GetAttributes().Any(attr => attr.AttributeClass?.Name == "UseStaticLambdaAttribute");
     }
 
-    private void ReportDiagnostic(OperationAnalysisContext context, ISymbol targetSymbol, Location location)
+    private void ReportDiagnostic(Action<Diagnostic> report, ISymbol targetSymbol, Location location)
     {
-        var attributeData = targetSymbol.GetAttributes().FirstOrDefault(a => a.AttributeClass?.Name == "UseStaticLambdaAttribute");
+        var attributeData = targetSymbol.GetAttributes().FirstOrDefault(a => a.AttributeClass?.ToDisplayString() == "SubtleEngineering.Analyzers.Decorators.UseStaticLambdaAttribute");
         var reasoning = attributeData?.ConstructorArguments.FirstOrDefault().Value?.ToString();
 
         int ruleIndex = string.IsNullOrEmpty(reasoning) ? SE1060 : SE1061;
@@ -140,6 +204,6 @@ public class UseStaticLambdaOrMethodAnalyzer : DiagnosticAnalyzer
             ? Diagnostic.Create(rule, location, targetSymbol.Name)
             : Diagnostic.Create(rule, location, targetSymbol.Name, reasoning);
 
-        context.ReportDiagnostic(diagnostic);
+        report(diagnostic);
     }
 }
