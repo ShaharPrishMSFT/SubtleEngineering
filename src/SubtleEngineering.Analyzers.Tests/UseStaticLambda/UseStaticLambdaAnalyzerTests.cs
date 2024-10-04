@@ -33,7 +33,75 @@ public class UseStaticLambdaOrMethodAnalyzerTests
         {
             VerifyCS.Diagnostic(
                 UseStaticLambdaOrMethodAnalyzer.Rules[1])
-                    .WithLocation(6, 22)
+                    .WithLocation(14, 22)
+                    .WithArguments("MyLambda", "Ensure performance optimization")
+        };
+        var sut = CreateSut(code, expected);
+        await sut.RunAsync();
+    }
+
+    [Fact]
+    public async Task TestNonStaticLambdaParameterUsage()
+    {
+        const string code = """
+            using SubtleEngineering.Analyzers.Decorators;
+            using System;
+            public class MyClass
+            {
+                public static void DoIt(
+                    [UseStaticLambda("Ensure performance optimization")]
+                    Func<int> lambda)
+                {
+                    lambda();
+                }
+            }
+
+            public class Program
+            {
+                public void Main()
+                {
+                    MyClass.DoIt(() => 42);
+                }
+            }
+            """;
+
+        List<DiagnosticResult> expected = new List<DiagnosticResult>
+        {
+            VerifyCS.Diagnostic(
+                UseStaticLambdaOrMethodAnalyzer.Rules[1])
+                    .WithLocation(14, 22)
+                    .WithArguments("MyLambda", "Ensure performance optimization")
+        };
+        var sut = CreateSut(code, expected);
+        await sut.RunAsync();
+    }
+
+    [Fact]
+    public async Task TestNonStaticLambdaUsageWhenInitializing()
+    {
+        const string code = """
+            using SubtleEngineering.Analyzers.Decorators;
+            using System;
+            public class MyClass
+            {
+                [UseStaticLambda("Ensure performance optimization")]
+                public Func<int> MyLambda { get; set; } = () => 42;
+            }
+
+            public class Program
+            {
+                public void Main()
+                {
+                    var c = new MyClass();
+                }
+            }
+            """;
+
+        List<DiagnosticResult> expected = new List<DiagnosticResult>
+        {
+            VerifyCS.Diagnostic(
+                UseStaticLambdaOrMethodAnalyzer.Rules[1])
+                    .WithLocation(14, 22)
                     .WithArguments("MyLambda", "Ensure performance optimization")
         };
         var sut = CreateSut(code, expected);
