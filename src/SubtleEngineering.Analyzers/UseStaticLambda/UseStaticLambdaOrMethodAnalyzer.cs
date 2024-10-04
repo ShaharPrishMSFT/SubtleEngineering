@@ -94,8 +94,8 @@ public class UseStaticLambdaOrMethodAnalyzer : DiagnosticAnalyzer
         var assignmentOperation = (IAssignmentOperation)context.Operation;
         ISymbol symbol = assignmentOperation.Target switch
         {
-            IPropertyReferenceOperation propertyReference => (ISymbol)propertyReference.Property,
-            IFieldReferenceOperation fieldReference => (ISymbol)fieldReference.Field,
+            IPropertyReferenceOperation propertyReference => propertyReference.Property,
+            IFieldReferenceOperation fieldReference => fieldReference.Field,
             _ => null
         };
 
@@ -113,7 +113,7 @@ public class UseStaticLambdaOrMethodAnalyzer : DiagnosticAnalyzer
 
     private static void AnalyzeLambdaAssignment(OperationAnalysisContext context, IOperation value, ISymbol symbol, AttributeData attribute)
     {
-        if (value is IAnonymousFunctionOperation lambdaOperation)
+        if (value is IDelegateCreationOperation delegateCreationOperation && delegateCreationOperation.Target is IAnonymousFunctionOperation lambdaOperation)
         {
             if (!lambdaOperation.Symbol.IsStatic)
             {
