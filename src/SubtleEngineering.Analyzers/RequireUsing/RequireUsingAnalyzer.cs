@@ -56,7 +56,6 @@
         private void AnalyzeMisuseOfAttributeMethod(SyntaxNodeAnalysisContext context)
         {
             var methodDeclaration = (MethodDeclarationSyntax)context.Node;
-
             var methodSymbol = context.SemanticModel.GetDeclaredSymbol(methodDeclaration);
 
             if (methodSymbol == null)
@@ -66,14 +65,21 @@
 
             if (HasAttribute<RequireUsingAttribute>(methodSymbol))
             {
-                // Check if the method's return type implements IDisposable or IAsyncDisposable
                 var returnType = methodSymbol.ReturnType;
 
-                if (returnType != null && !IsOrInheritingFromDisposable(returnType))
+                // Check if the return type is a ref struct
+                if (returnType.IsRefLikeType)
+                {
+                    // Check for public Dispose() or DisposeAsync() methods
+                    if (HasPublicDisposeMethod(returnType))
+                    {
+                        return; // No diagnostic needed since the ref struct can be disposed via public Dispose methods
+                    }
+                }
+                else if (!IsOrInheritingFromDisposable(returnType))
                 {
                     // If the method's return type does not implement the required interfaces, report a diagnostic
                     var diagnostic = Diagnostic.Create(Rules[SE1002], methodDeclaration.ReturnType.GetLocation(), methodSymbol.Name);
-
                     context.ReportDiagnostic(diagnostic);
                 }
             }
@@ -82,7 +88,6 @@
         private void AnalyzeMisuseOfAttributeClass(SyntaxNodeAnalysisContext context)
         {
             var classDeclaration = (ClassDeclarationSyntax)context.Node;
-
             var classSymbol = context.SemanticModel.GetDeclaredSymbol(classDeclaration);
 
             if (classSymbol == null)
@@ -92,19 +97,32 @@
 
             if (HasAttribute<RequireUsingAttribute>(classSymbol))
             {
-                // Check if the class implements IDisposable or IAsyncDisposable
-                var implementsIDisposable = IsOrInheritingFromDisposable(classSymbol);
-
-                if (!implementsIDisposable)
+                // Check if the class is a ref struct
+                if (classSymbol.IsRefLikeType)
+                {
+                    // Check for public Dispose() or DisposeAsync() methods
+                    if (HasPublicDisposeMethod(classSymbol))
+                    {
+                        return; // No diagnostic needed since the ref struct can be disposed via public Dispose methods
+                    }
+                }
+                else if (!IsOrInheritingFromDisposable(classSymbol))
                 {
                     // If the class does not implement the required interfaces, report a diagnostic
                     var diagnostic = Diagnostic.Create(Rules[SE1001], classDeclaration.Identifier.GetLocation(), classSymbol.Name);
-
                     context.ReportDiagnostic(diagnostic);
                 }
             }
         }
 
+        private static bool HasPublicDisposeMethod(ITypeSymbol typeSymbol)
+        {
+            // Check if the type has a public Dispose() or DisposeAsync() method
+            return typeSymbol.GetMembers().OfType<IMethodSymbol>().Any(m =>
+                (m.Name == "Dispose" || m.Name == "DisposeAsync") &&
+                m.DeclaredAccessibility == Accessibility.Public &&
+                m.Parameters.IsEmpty);
+        }
         private static bool IsOrInheritingFromDisposable(ITypeSymbol classSymbol)
         {
             return classSymbol.AllInterfaces.Append(classSymbol).Any(i => i.IsOfType<IDisposable>() || i.FuzzyIsTypeOf("IAsyncDisposable"));

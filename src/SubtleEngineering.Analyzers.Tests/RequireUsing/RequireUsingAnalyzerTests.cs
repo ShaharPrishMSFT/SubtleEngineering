@@ -326,6 +326,149 @@ public class RequireUsingAnalyzerTests
         await sut.RunAsync();
     }
 
+    [Fact]
+    public async Task RefStructWithRequiresUsingOnMethodDoesNotWarnOnAttributeUsage()
+    {
+        const string code = """
+            using SubtleEngineering.Analyzers.Decorators;
+            using System;
+
+            public class MyClass
+            {
+                [RequireUsing]
+                public MyRefStruct Method() => default;
+            }
+
+            public class Program
+            {
+                public static void Main()
+                {
+                    var c = new MyClass();
+                    c.Method();
+                }
+            }
+
+            public ref struct MyRefStruct
+            {
+                public void Dispose()
+                {
+                }
+            }
+            """;
+
+        List<DiagnosticResult> expected = [
+            VerifyCS.Diagnostic(
+            RequireUsingAnalyzer.Rules.Find(DiagnosticsDetails.RequireUsing.TypeMustBeInstantiatedWithinAUsingStatementId))
+                .WithLocation(15, 9)
+                .WithArguments("Method"),
+                 ];
+
+        var sut = CreateSut(code, expected);
+        await sut.RunAsync();
+    }
+
+    [Fact]
+    public async Task RefStructWithRequiresUsingOnMethodDoesNotWarnWhenUsedCorrectly()
+    {
+        const string code = """
+            using SubtleEngineering.Analyzers.Decorators;
+            using System;
+
+            public class MyClass
+            {
+                [RequireUsing]
+                public MyRefStruct Method() => default;
+            }
+
+            public class Program
+            {
+                public static void Main()
+                {
+                    var c = new MyClass();
+                    using (c.Method())
+                    {
+                    }
+                }
+            }
+
+            public ref struct MyRefStruct
+            {
+                public void Dispose()
+                {
+                }
+            }
+            """;
+
+        var sut = CreateSut(code, []);
+        await sut.RunAsync();
+    }
+
+    [Fact]
+    public async Task RefStructWithRequiresUsingOnStructDoesNotWarnWhenUsedCorrectly()
+    {
+        const string code = """
+            using SubtleEngineering.Analyzers.Decorators;
+            using System;
+
+            public class Program
+            {
+                public static void Main()
+                {
+                    using (var c = new MyRefStruct())
+                    {
+                    }
+                }
+            }
+
+            [RequireUsing]
+            public ref struct MyRefStruct
+            {
+                public void Dispose()
+                {
+                }
+            }
+            """;
+
+        var sut = CreateSut(code, []);
+        await sut.RunAsync();
+    }
+
+    [Fact]
+    public async Task RefStructWithRequiresUsingOnStructWarnsWhenUsedIncorrectly()
+    {
+        const string code = """
+            using SubtleEngineering.Analyzers.Decorators;
+            using System;
+
+            public class Program
+            {
+                public static void Main()
+                {
+                    new MyRefStruct();
+                }
+            }
+
+            [RequireUsing]
+            public ref struct MyRefStruct
+            {
+                public void Dispose()
+                {
+                }
+            }
+            """;
+
+        List<DiagnosticResult> expected = [
+            VerifyCS.Diagnostic(
+                    RequireUsingAnalyzer.Rules.Find(DiagnosticsDetails.RequireUsing.TypeMustBeInstantiatedWithinAUsingStatementId))
+                        .WithLocation(8, 9)
+                        .WithArguments("MyRefStruct"),
+            ];
+
+
+        var sut = CreateSut(code, expected);
+        await sut.RunAsync();
+    }
+
     private VerifyCS.Test CreateSut(string code, List<DiagnosticResult> expected)
     {
         var test = new VerifyCS.Test()
