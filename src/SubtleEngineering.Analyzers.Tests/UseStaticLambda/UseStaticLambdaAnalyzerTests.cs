@@ -1,10 +1,9 @@
 ﻿namespace SubtleEngineering.Analyzers.Tests.UseStaticLambda;
 
-using VerifyCS = CSharpAnalyzerVerifier<UseDifferentMethod.UseStaticLambdaOrMethodAnalyzer>;
+using VerifyCS = CSharpAnalyzerVerifier<UseStaticLambdaOrMethodAnalyzer>;
 using SubtleEngineering.Analyzers.Decorators;
 using Microsoft.CodeAnalysis.Testing;
 using Microsoft.CodeAnalysis;
-using SubtleEngineering.Analyzers.UseDifferentMethod;
 
 public class UseStaticLambdaOrMethodAnalyzerTests
 {
@@ -17,7 +16,7 @@ public class UseStaticLambdaOrMethodAnalyzerTests
             public class MyClass
             {
                 [UseStaticLambda("Ensure performance optimization")]
-                public Func<int> MyLambda { get; set; } = () => 42; // Non-static lambda
+                public Func<int> MyLambda { get; set; }
             }
 
             public class Program
@@ -33,9 +32,9 @@ public class UseStaticLambdaOrMethodAnalyzerTests
         List<DiagnosticResult> expected = new List<DiagnosticResult>
         {
             VerifyCS.Diagnostic(
-                UseStaticLambdaOrMethodAnalyzer.Rules[0])
-                    .WithLocation(5, 44)
-                    .WithArguments("MyLambda")
+                UseStaticLambdaOrMethodAnalyzer.Rules[1])
+                    .WithLocation(6, 22)
+                    .WithArguments("MyLambda", "Ensure performance optimization")
         };
         var sut = CreateSut(code, expected);
         await sut.RunAsync();
@@ -50,12 +49,12 @@ public class UseStaticLambdaOrMethodAnalyzerTests
             public class MyClass
             {
                 [UseStaticLambda("Ensure performance optimization")]
-                public Func<int> MyLambda { get; set; } = () => 42; // Non-static lambda
+                public Func<int> MyLambda { get; set; }
             }
             
             public class Program
             {
-                public Main()
+                public void Main()
                 {
                     var c = new MyClass();
                     c.MyLambda = static () => 42;
