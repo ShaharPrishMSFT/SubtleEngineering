@@ -40,6 +40,10 @@ public class Caller
 }
 ```
 
+#### Change log
+
+* 2024-10-04: Added support for duck-typed ref struct usage (when a ref struct has a public `Dispose` or `DisposeAsync` methods)
+
 #### SE1000: TypeMustBeInstantiatedWithinAUsingStatement
 
 **What it looks for**: This analyzer checks if a type or method is being instantiated or called outside a using statement or using declaration. This also includes types or methods with the `RequireUsingAttribute` attribute.
