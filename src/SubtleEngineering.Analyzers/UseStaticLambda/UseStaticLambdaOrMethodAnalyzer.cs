@@ -4,6 +4,7 @@ using Microsoft.CodeAnalysis.Diagnostics;
 using Microsoft.CodeAnalysis;
 using SubtleEngineering.Analyzers;
 using System.Collections.Immutable;
+using Microsoft.CodeAnalysis.Operations;
 
 [DiagnosticAnalyzer(LanguageNames.CSharp)]
 public class UseStaticLambdaOrMethodAnalyzer : DiagnosticAnalyzer
@@ -37,32 +38,31 @@ public class UseStaticLambdaOrMethodAnalyzer : DiagnosticAnalyzer
 
         // Register a symbol action to analyze fields, properties, and method parameters
         context.RegisterSymbolAction(AnalyzeMember, SymbolKind.Field, SymbolKind.Property, SymbolKind.Parameter);
+
+        // Register an operation action to analyze lambda assignments
+        context.RegisterOperationAction(AnalyzeAssignment, OperationKind.SimpleAssignment);
     }
 
     private static void AnalyzeMember(SymbolAnalysisContext context)
     {
         var symbol = context.Symbol;
-        var attributes = symbol.GetAttributes();
-
-        foreach (var attribute in attributes)
+        var attribute = GetUseStaticLambdaAttribute(symbol);
+        if (attribute == null)
         {
-            if (attribute.AttributeClass?.ToDisplayString() == "SubtleEngineering.Analyzers.Decorators.UseStaticLambdaAttribute")
-            {
-                if (symbol is IFieldSymbol fieldSymbol && fieldSymbol.Type.TypeKind == TypeKind.Delegate)
-                {
-                    AnalyzeLambda(fieldSymbol, context, attribute);
-                }
-                else if (symbol is IPropertySymbol propertySymbol && propertySymbol.Type.TypeKind == TypeKind.Delegate)
-                {
-                    AnalyzeLambda(propertySymbol, context, attribute);
-                }
-                else if (symbol is IParameterSymbol parameterSymbol && parameterSymbol.Type.TypeKind == TypeKind.Delegate)
-                {
-                    AnalyzeLambda(parameterSymbol, context, attribute);
-                }
+            return;
+        }
 
-                return;
-            }
+        if (symbol is IFieldSymbol fieldSymbol && fieldSymbol.Type.TypeKind == TypeKind.Delegate)
+        {
+            AnalyzeLambda(fieldSymbol, context, attribute);
+        }
+        else if (symbol is IPropertySymbol propertySymbol && propertySymbol.Type.TypeKind == TypeKind.Delegate)
+        {
+            AnalyzeLambda(propertySymbol, context, attribute);
+        }
+        else if (symbol is IParameterSymbol parameterSymbol && parameterSymbol.Type.TypeKind == TypeKind.Delegate)
+        {
+            AnalyzeLambda(parameterSymbol, context, attribute);
         }
     }
 
@@ -79,31 +79,75 @@ public class UseStaticLambdaOrMethodAnalyzer : DiagnosticAnalyzer
             if (syntax is VariableDeclaratorSyntax variableDeclarator)
             {
                 var initializer = variableDeclarator.Initializer?.Value;
-                if (initializer is SimpleLambdaExpressionSyntax lambdaExpression && !lambdaExpression.Modifiers.Any(SyntaxKind.StaticKeyword))
-                {
-                    var diagnostic = Diagnostic.Create(diagnosticDescriptor, symbol.Locations[0], symbol.Name, reasonArg);
-                    context.ReportDiagnostic(diagnostic);
-                }
-                else if (initializer is ParenthesizedLambdaExpressionSyntax parenthesizedLambda && !parenthesizedLambda.Modifiers.Any(SyntaxKind.StaticKeyword))
-                {
-                    var diagnostic = Diagnostic.Create(diagnosticDescriptor, symbol.Locations[0], symbol.Name, reasonArg);
-                    context.ReportDiagnostic(diagnostic);
-                }
+                ReportIfNonStaticLambda(context, symbol, diagnosticDescriptor, initializer, reasonArg);
             }
             else if (syntax is PropertyDeclarationSyntax propertyDeclaration)
             {
                 var initializer = propertyDeclaration.Initializer?.Value;
-                if (initializer is SimpleLambdaExpressionSyntax lambdaExpression && !lambdaExpression.Modifiers.Any(SyntaxKind.StaticKeyword))
-                {
-                    var diagnostic = Diagnostic.Create(diagnosticDescriptor, symbol.Locations[0], symbol.Name, reasonArg);
-                    context.ReportDiagnostic(diagnostic);
-                }
-                else if (initializer is ParenthesizedLambdaExpressionSyntax parenthesizedLambda && !parenthesizedLambda.Modifiers.Any(SyntaxKind.StaticKeyword))
-                {
-                    var diagnostic = Diagnostic.Create(diagnosticDescriptor, symbol.Locations[0], symbol.Name, reasonArg);
-                    context.ReportDiagnostic(diagnostic);
-                }
+                ReportIfNonStaticLambda(context, symbol, diagnosticDescriptor, initializer, reasonArg);
             }
+        }
+    }
+
+    private static void AnalyzeAssignment(OperationAnalysisContext context)
+    {
+        var assignmentOperation = (IAssignmentOperation)context.Operation;
+        ISymbol symbol = assignmentOperation.Target switch
+        {
+            IPropertyReferenceOperation propertyReference => (ISymbol)propertyReference.Property,
+            IFieldReferenceOperation fieldReference => (ISymbol)fieldReference.Field,
+            _ => null
+        };
+
+        if (symbol == null)
+        {
+            return;
+        }
+
+        var attribute = GetUseStaticLambdaAttribute(symbol);
+        if (attribute != null)
+        {
+            AnalyzeLambdaAssignment(context, assignmentOperation.Value, symbol, attribute);
+        }
+    }
+
+    private static void AnalyzeLambdaAssignment(OperationAnalysisContext context, IOperation value, ISymbol symbol, AttributeData attribute)
+    {
+        if (value is IAnonymousFunctionOperation lambdaOperation)
+        {
+            if (!lambdaOperation.Symbol.IsStatic)
+            {
+                var reasonArg = attribute.ConstructorArguments.Length > 0 ? attribute.ConstructorArguments[0].Value?.ToString() : null;
+                var diagnosticDescriptor = reasonArg != null ? Rules[SE1061] : Rules[SE1060];
+                var diagnostic = Diagnostic.Create(diagnosticDescriptor, symbol.Locations[0], symbol.Name, reasonArg);
+                context.ReportDiagnostic(diagnostic);
+            }
+        }
+    }
+
+    private static AttributeData GetUseStaticLambdaAttribute(ISymbol symbol)
+    {
+        foreach (var attribute in symbol.GetAttributes())
+        {
+            if (attribute.AttributeClass?.ToDisplayString() == "SubtleEngineering.Analyzers.Decorators.UseStaticLambdaAttribute")
+            {
+                return attribute;
+            }
+        }
+        return null;
+    }
+
+    private static void ReportIfNonStaticLambda(SymbolAnalysisContext context, ISymbol symbol, DiagnosticDescriptor diagnosticDescriptor, ExpressionSyntax initializer, string reasonArg)
+    {
+        if (initializer is SimpleLambdaExpressionSyntax lambdaExpression && !lambdaExpression.Modifiers.Any(SyntaxKind.StaticKeyword))
+        {
+            var diagnostic = Diagnostic.Create(diagnosticDescriptor, symbol.Locations[0], symbol.Name, reasonArg);
+            context.ReportDiagnostic(diagnostic);
+        }
+        else if (initializer is ParenthesizedLambdaExpressionSyntax parenthesizedLambda && !parenthesizedLambda.Modifiers.Any(SyntaxKind.StaticKeyword))
+        {
+            var diagnostic = Diagnostic.Create(diagnosticDescriptor, symbol.Locations[0], symbol.Name, reasonArg);
+            context.ReportDiagnostic(diagnostic);
         }
     }
 }
