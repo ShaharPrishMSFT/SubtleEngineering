@@ -12,37 +12,59 @@ In cases where the caller knows that they are doing something safe, they can sup
 #### Example
 
 ```csharp
+// Synchronous disposable
 [RequireUsing]
 public class DisposableClass : IDisposable
 {
-	public void Dispose()
-	{
-		// Dispose implementation
-	}
+    public void Dispose()
+    {
+        // Dispose implementation
+    }
+}
+
+// Async disposable
+[RequireUsing]
+public class AsyncDisposableClass : IAsyncDisposable
+{
+    public ValueTask DisposeAsync() => ValueTask.CompletedTask;
 }
 
 public class Caller
 {
-	public void Call()
-	{
-		// This will raise a warning
-		var disposable = new DisposableClass();
+    public void Call()
+    {
+        // This will raise a warning
+        var disposable = new DisposableClass();
 
-		// This will not raise a warning
-		using (var disposable = new DisposableClass())
-		{
-			// Do something with disposable
-		}
+        // This will not raise a warning
+        using (var disposable = new DisposableClass())
+        {
+            // Do something with disposable
+        }
 
-		// This will not raise a warning
-		var disposable = new DisposableClass().ExcludeFromUsing();
-	}
+        // This will not raise a warning
+        var disposable = new DisposableClass().ExcludeFromUsing();
+    }
+
+    public async Task CallAsync()
+    {
+        // Methods returning Task<T> or ValueTask<T> where T is disposable
+        // must also be used within using statements
+        using var resource = await GetResourceAsync();
+    }
+
+    [RequireUsing]
+    public static async Task<DisposableClass> GetResourceAsync() => new DisposableClass();
+
+    [RequireUsing]
+    public static async ValueTask<AsyncDisposableClass> GetResourceValueTaskAsync() => new AsyncDisposableClass();
 }
 ```
 
 #### Change log
 
 * 2024-10-04: Added support for duck-typed ref struct usage (when a ref struct has a public `Dispose` or `DisposeAsync` methods)
+* 2025-04-26: Added support for ValueTask<T> return types in RequireUsing analyzer, ensuring proper disposal of ValueTask results when T implements IDisposable/IAsyncDisposable
 
 #### SE1000: TypeMustBeInstantiatedWithinAUsingStatement
 
@@ -228,4 +250,3 @@ var x = e.ForceExhaustive() switch
 	MyEnum.Value1 and MyEnum.Value2 => // Disallowed and doesnt make sense.
 	etc...
 }
-

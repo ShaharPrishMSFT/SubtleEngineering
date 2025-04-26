@@ -171,6 +171,76 @@ public class RequireUsingAnalyzerTests
     }
 
     [Fact]
+    public async Task TestSimpleBadCallCaseTask()
+    {
+        const string code = """
+            using SubtleEngineering.Analyzers.Decorators;
+            using System;
+            using System.Threading.Tasks;
+
+            public class MyClass : IDisposable
+            {
+                public void Dispose()
+                {
+                }
+            }
+
+            public class Program
+            {
+                public static async Task Main()
+                {
+                    var myClass = await Create();
+                }
+
+            [RequireUsing]
+            public static Task<MyClass> Create() => null;
+            }
+            """;
+
+        var expected = VerifyCS.Diagnostic(
+            RequireUsingAnalyzer.Rules.Find(DiagnosticsDetails.RequireUsing.TypeMustBeInstantiatedWithinAUsingStatementId))
+                .WithLocation(16, 29)
+                .WithArguments("Create");
+        var sut = CreateSut(code, [expected]);
+        await sut.RunAsync();
+    }
+
+    [Fact]
+    public async Task TestSimpleBadCallCaseValueTask()
+    {
+        const string code = """
+            using SubtleEngineering.Analyzers.Decorators;
+            using System;
+            using System.Threading.Tasks;
+
+            public class MyClass : IDisposable
+            {
+                public void Dispose()
+                {
+                }
+            }
+
+            public class Program
+            {
+                public static async Task Main()
+                {
+                    var myClass = await Create();
+                }
+
+            [RequireUsing]
+            public static ValueTask<MyClass> Create() => ValueTask.FromResult<MyClass>(null);
+            }
+            """;
+
+        var expected = VerifyCS.Diagnostic(
+            RequireUsingAnalyzer.Rules.Find(DiagnosticsDetails.RequireUsing.TypeMustBeInstantiatedWithinAUsingStatementId))
+                .WithLocation(16, 29)
+                .WithArguments("Create");
+        var sut = CreateSut(code, [expected]);
+        await sut.RunAsync();
+    }
+
+    [Fact]
     public async Task TestSuppressionMethodOnCreation()
     {
         const string code = """

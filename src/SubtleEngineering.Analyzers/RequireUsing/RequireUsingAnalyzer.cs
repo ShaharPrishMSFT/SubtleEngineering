@@ -125,6 +125,15 @@
         }
         private static bool IsOrInheritingFromDisposable(ITypeSymbol classSymbol)
         {
+            if (classSymbol is INamedTypeSymbol namedType && namedType.IsGenericType)
+            {
+                // If it's a ValueTask<T>, check if T implements IDisposable/IAsyncDisposable
+                if (namedType.ConstructedFrom.Name == "ValueTask")
+                {
+                    var typeArg = namedType.TypeArguments[0];
+                    return typeArg.AllInterfaces.Append(typeArg).Any(i => i.IsOfType<IDisposable>() || i.FuzzyIsTypeOf("IAsyncDisposable"));
+                }
+            }
             return classSymbol.AllInterfaces.Append(classSymbol).Any(i => i.IsOfType<IDisposable>() || i.FuzzyIsTypeOf("IAsyncDisposable"));
         }
 
