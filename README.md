@@ -250,3 +250,39 @@ var x = e.ForceExhaustive() switch
 	MyEnum.Value1 and MyEnum.Value2 => // Disallowed and doesnt make sense.
 	etc...
 }
+```
+
+### Code quality: Warn against using non-static lambdas (SE106X)
+
+For performance-sensitive code, it's sometimes useful for the developer to prevent misuse of a method or class to protect the developer.
+
+Using the [UseStaticLambda] on a field, property or parameter will cause the analyzer to emit a warning if a non-static lambda is passed in.
+
+```csharp
+public ref struct MyOptimizedNonAllocUtility
+{
+	public MyOptimizedNonAllocUtility([UseStaticLambda] Func<int> myDelegate)
+	{
+		_myDelegate = myDelegate;
+	}
+}
+
+// Code using the struct
+var s = new MyOptimizedNonAllocUtility(() => 42); // This will emit SE1060
+
+// Fixed code:
+var s = new MyOptimizedNonAllocUtility(static () => 42); // This will emit SE1060
+
+
+```
+
+#### SE1060/SE1061
+
+**What it looks for**: Passing in non-static delegates to methods that expect to get a static.
+
+**Why**: For performance-sensitive code that uses delegates, it's easy to sometimes forget that creating a capturing delegate can be expensive. This will remind the developer to use a delegate that will not allocate or allocate less.
+
+**How it helps engineers**: Reduces the chance of making such mistakes.
+
+
+

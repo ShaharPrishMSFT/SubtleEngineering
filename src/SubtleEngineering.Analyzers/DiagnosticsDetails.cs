@@ -54,5 +54,11 @@
             public const string SwitchContainsUnsupportedPatterns = "SE1052";
 
         }
+
+        public class UseStaticLambdaOrMethod
+        {
+            public const string UseStaticNoReasoning = "SE1060";
+            public const string UseStaticWithReason = "SE1061";
+        }
     }
 }
